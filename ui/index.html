@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>skill-habit</title>
+<style>
+/* ── Tokens: Light ─────────────────────────────────────────────── */
+:root {
+  --brand:      #16a34a;
+  --brand-2:    #0d9488;
+  --brand-dim:  rgba(22,163,74,.1);
+  --bg:         #ffffff;
+  --bg2:        #f6f8fa;
+  --bg3:        #eaeef2;
+  --card-bg:    #ffffff;
+  --fg:         #1f2328;
+  --fg2:        #57606a;
+  --border:     #d0d7de;
+  --shadow:     0 1px 3px rgba(31,35,40,.06), 0 8px 24px rgba(31,35,40,.04);
+  --radius:     10px;
+  --input-bg:   #f6f8fa;
+  --banner-bg:      #fef2f2;
+  --banner-border:  #fca5a5;
+  --banner-title:   #dc2626;
+  --banner-body:    #7f1d1d;
+  --banner-dismiss: #dc2626;
+}
+/* ── Tokens: Explicit dark ─────────────────────────────────────── */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --brand-dim:  rgba(22,163,74,.18);
+  --bg:         #0d1117;
+  --bg2:        #161b22;
+  --bg3:        #21262d;
+  --card-bg:    #161b22;
+  --fg:         #e6edf3;
+  --fg2:        #adbac7;
+  --border:     #30363d;
+  --shadow:     0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
+  --input-bg:   #21262d;
+  --banner-bg:      #1c0a0a;
+  --banner-border:  #7f1d1d;
+  --banner-title:   #fca5a5;
+  --banner-body:    #fecaca;
+  --banner-dismiss: #fca5a5;
+}
+/* ── Tokens: System follows OS ─────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    color-scheme: dark;
+    --brand-dim:  rgba(22,163,74,.18);
+    --bg:         #0d1117;
+    --bg2:        #161b22;
+    --bg3:        #21262d;
+    --card-bg:    #161b22;
+    --fg:         #e6edf3;
+    --fg2:        #adbac7;
+    --border:     #30363d;
+    --shadow:     0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
+    --input-bg:   #21262d;
+    --banner-bg:      #1c0a0a;
+    --banner-border:  #7f1d1d;
+    --banner-title:   #fca5a5;
+    --banner-body:    #fecaca;
+    --banner-dismiss: #fca5a5;
+  }
+}
+
+/* ── Update banner ──────────────────────────────────────────────── */
+#update-banner {
+  display: none;
+  background: var(--banner-bg);
+  border-bottom: 2px solid var(--banner-border);
+  padding: 12px 28px;
+}
+.banner-inner {
+  max-width: 920px; margin: 0 auto;
+  display: flex; align-items: flex-start; gap: 16px;
+}
+.banner-body { flex: 1; min-width: 0; }
+.banner-title {
+  color: var(--banner-title);
+  font-weight: 600; font-size: 13px; margin-bottom: 6px;
+}
+.banner-notes {
+  font-size: 12px; color: var(--banner-body);
+  line-height: 1.7; white-space: pre-wrap;
+}
+.banner-notes:empty { display: none; }
+.banner-actions {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0; padding-top: 2px;
+}
+.banner-dismiss-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--banner-dismiss); font-size: 20px;
+  line-height: 1; padding: 0 4px; opacity: .55;
+  transition: opacity .15s;
+}
+.banner-dismiss-btn:hover { opacity: 1; }
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--fg);
+  font-size: 14px; line-height: 1.5; min-height: 100vh;
+}
+
+/* ── Top accent stripe ─────────────────────────────────────────── */
+body::before {
+  content: ''; position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+}
+
+/* ── Header ────────────────────────────────────────────────────── */
+header {
+  position: sticky; top: 3px; z-index: 90;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 58px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-name { font-size: 16px; font-weight: 700; letter-spacing: -.3px; }
+.brand-desc { font-size: 11px; color: var(--fg2); margin-top: 1px; }
+.header-chips { display: flex; gap: 8px; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  background: var(--brand-dim); color: var(--brand); border: 1px solid rgba(22,163,74,.2);
+}
+
+/* ── Nav ───────────────────────────────────────────────────────── */
+nav {
+  position: sticky; top: 61px; z-index: 80;
+  display: flex; align-items: center; gap: 2px;
+  padding: 10px 28px 0; border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+nav button {
+  background: none; border: none; cursor: pointer;
+  padding: 7px 16px; font-size: 13px; font-weight: 500; color: var(--fg2);
+  border-radius: 8px 8px 0 0; border-bottom: 2px solid transparent;
+  transition: color .15s, background .15s; margin-bottom: -1px;
+}
+nav button:hover:not(.active) { background: var(--bg2); color: var(--fg); }
+nav button.active { color: var(--brand); border-bottom-color: var(--brand); background: var(--brand-dim); }
+
+/* ── Main ──────────────────────────────────────────────────────── */
+main { padding: 28px; max-width: 920px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Cards ─────────────────────────────────────────────────────── */
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+  box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.analytics-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;
+}
+.analytics-grid .card { margin-bottom: 0; }
+.card.span-full { grid-column: 1 / -1; }
+.dist-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.analytics-grid .dist-pair { grid-column: 1 / -1; }
+.dist-pair .card { margin-bottom: 0; }
+/* Last card alone in a row (1st, 3rd, 5th…) spans full width automatically */
+.analytics-grid .card:last-child:nth-child(2n+1) { grid-column: 1 / -1; }
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+}
+.card-title {
+  font-size: 14px; font-weight: 600; color: var(--fg);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
+}
+.card-icon {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--brand-dim);
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.card-hint { font-size: 12px; color: var(--fg2); margin-bottom: 16px; }
+
+/* ── Stats ─────────────────────────────────────────────────────── */
+.stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 20px; overflow: hidden; position: relative;
+}
+.stat-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2)); opacity: .5;
+}
+.stat-card .num { font-size: 30px; font-weight: 800; color: var(--brand); line-height: 1; }
+.stat-card .lbl { font-size: 12px; color: var(--fg2); margin-top: 6px; font-weight: 500; }
+
+/* ── Time window bar (inside nav, right side) ───────────────────── */
+#global-tw-bar {
+  display: flex; align-items: center; gap: 6px;
+  margin-left: auto; padding-bottom: 1px;
+}
+#global-tw-bar label { font-size: 12px; color: var(--fg2); font-weight: 500; }
+#global-tw-bar select { background: none; border: none; color: var(--fg); font-size: 13px; font-weight: 500; cursor: pointer; outline: none; padding: 4px 2px; }
+
+/* ── Skill rows ────────────────────────────────────────────────── */
+.skill-row {
+  display: grid; grid-template-columns: 32px 1fr 1fr 110px 44px 68px;
+  align-items: center; gap: 10px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.skill-row:last-child { border-bottom: none; }
+.rank-badge {
+  width: 26px; height: 26px; border-radius: 6px; background: var(--brand-dim);
+  color: var(--brand); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.rank-badge.pin { background: #fef3c7; color: #b45309; }
+[data-theme="dark"] .rank-badge.pin,
+[data-theme="system"] .rank-badge.pin { background: #3d2b0a; color: #fbbf24; }
+.skill-name { font-family: monospace; font-size: 12px; color: var(--brand); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skill-desc { font-size: 12px; color: var(--fg2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-wrap { height: 6px; background: var(--bg3); border-radius: 3px; }
+.bar-fill { height: 6px; border-radius: 3px; background: #bbf7d0; transition: width .4s; }
+.bar-fill[data-l="2"] { background: #86efac; }
+.bar-fill[data-l="3"] { background: #16a34a; }
+.bar-fill[data-l="4"] { background: #14532d; }
+[data-theme="dark"] .bar-fill, [data-theme="system"] .bar-fill { background: #166534; }
+[data-theme="dark"] .bar-fill[data-l="2"], [data-theme="system"] .bar-fill[data-l="2"] { background: #15803d; }
+[data-theme="dark"] .bar-fill[data-l="3"], [data-theme="system"] .bar-fill[data-l="3"] { background: #16a34a; }
+[data-theme="dark"] .bar-fill[data-l="4"], [data-theme="system"] .bar-fill[data-l="4"] { background: #86efac; }
+.count-lbl { font-size: 12px; color: var(--fg2); text-align: right; font-weight: 500; }
+.tg-chain { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 16px 4px; }
+.tg-node { background: var(--brand-dim); color: var(--brand); padding: 5px 12px; border-radius: 8px; font-weight: 600; font-size: 13px; font-family: monospace; white-space: nowrap; }
+.tg-arrow { color: var(--fg2); font-size: 16px; line-height: 1; }
+.tg-hint { font-size: 12px; color: var(--fg3,var(--fg2)); margin-top: 8px; }
+.pin-btn {
+  font-size: 11px; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-weight: 500;
+  border: 1px solid var(--border); background: var(--bg2); color: var(--fg2); transition: all .15s;
+}
+.pin-btn:hover { border-color: var(--brand); color: var(--brand); }
+.pin-btn.pinned { background: var(--brand-dim); color: var(--brand); border-color: var(--brand); }
+
+/* ── Empty state ───────────────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 380px; gap: 14px;
+  text-align: center; padding: 48px 24px;
+}
+.empty-icon {
+  width: 68px; height: 68px; border-radius: 16px; background: var(--brand-dim);
+  display: flex; align-items: center; justify-content: center;
+}
+.empty-title { font-size: 16px; font-weight: 600; color: var(--fg); }
+.empty-desc { font-size: 13px; color: var(--fg2); max-width: 480px; line-height: 1.7; text-wrap: balance; }
+.empty-steps {
+  margin-top: 4px; text-align: left; font-size: 12px; color: var(--fg2);
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 18px; list-style: decimal inside;
+}
+.empty-steps li { margin-bottom: 6px; line-height: 1.7; }
+.empty-steps li:last-child { margin-bottom: 0; }
+.empty-steps code {
+  font-family: monospace; font-size: 11px; padding: 1px 5px;
+  background: var(--bg3); border-radius: 4px; color: var(--brand);
+}
+
+/* ── Heatmap ───────────────────────────────────────────────────── */
+.hm-outer { display: flex; align-items: flex-start; gap: 4px; overflow-x: auto; padding-bottom: 2px; background: var(--card-bg); }
+.hm-day-labels { display: grid; grid-template-rows: repeat(7, 12px); gap: 3px; margin-top: 20px; flex-shrink: 0; }
+.hm-day-lbl { font-size: 9px; color: var(--fg2); line-height: 12px; white-space: nowrap; text-align: right; }
+.hm-right { }
+.hm-months { position: relative; height: 16px; margin-bottom: 4px; }
+.hm-month-label { position: absolute; font-size: 10px; color: var(--fg2); white-space: nowrap; top: 0; }
+.heatmap { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; gap: 3px; }
+.hm-week-select { margin-left: auto; }
+.hm-legend { display: flex; align-items: center; gap: 3px; justify-content: flex-end; margin-top: 6px; font-size: 10px; color: var(--fg2); }
+.hm-legend .hm-cell { cursor: default; }
+.hm-cell { width: 12px; height: 12px; border-radius: 2px; background: var(--bg3); cursor: default; transition: transform .1s; }
+.hm-cell:hover { transform: scale(1.3); }
+.hm-grid-wrapper { position: relative; }
+.hm-sep-line { position: absolute; top: 0; height: 102px; width: 1px; background: var(--fg2); opacity: 0.35; pointer-events: none; }
+.hm-cell[data-l="1"] { background: #bbf7d0; }
+.hm-cell[data-l="2"] { background: #86efac; }
+.hm-cell[data-l="3"] { background: #16a34a; }
+.hm-cell[data-l="4"] { background: #14532d; }
+[data-theme="dark"] .hm-cell[data-l="1"],
+[data-theme="system"] .hm-cell[data-l="1"] { background: #166534; }
+[data-theme="dark"] .hm-cell[data-l="2"],
+[data-theme="system"] .hm-cell[data-l="2"] { background: #15803d; }
+[data-theme="dark"] .hm-cell[data-l="3"],
+[data-theme="system"] .hm-cell[data-l="3"] { background: #16a34a; }
+[data-theme="dark"] .hm-cell[data-l="4"],
+[data-theme="system"] .hm-cell[data-l="4"] { background: #86efac; }
+
+/* ── Bar chart ─────────────────────────────────────────────────── */
+.bc-wrap { display: flex; gap: 6px; align-items: flex-end; }
+.bc-yax { position: relative; width: 30px; flex-shrink: 0; height: 100px; margin-bottom: 22px; }
+.yl { position: absolute; right: 0; font-size: 10px; color: var(--fg2); transform: translateY(50%); white-space: nowrap; line-height: 1; }
+.bc-area { flex: 1; position: relative; }
+.gl { position: absolute; left: 0; right: 0; height: 1px; background: var(--border); opacity: 0.5; pointer-events: none; z-index: 0; }
+.bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 100px; position: relative; z-index: 1; }
+.bcc { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; position: relative; cursor: default; }
+.bcb { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; background: linear-gradient(0deg, var(--brand), var(--brand-2)); opacity: .8; transition: height .4s; }
+.bcl { font-size: 10px; color: var(--fg2); margin-top: 4px; }
+.bcc::before {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--fg); color: var(--bg); padding: 3px 7px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .1s; z-index: 100;
+}
+.bcc:hover::before { opacity: 1; }
+
+/* ── Settings ──────────────────────────────────────────────────── */
+.s-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 0; border-bottom: 1px solid var(--border); gap: 16px;
+}
+.s-row:last-child { border-bottom: none; }
+.s-lbl { font-size: 13px; font-weight: 500; color: var(--fg); }
+.s-sub { font-size: 12px; color: var(--fg2); margin-top: 3px; }
+.s-sub:empty { display: none; }
+
+select, input[type=number], input[type=text] {
+  background: var(--input-bg); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--fg); padding: 5px 10px; font-size: 13px;
+  outline: none; transition: border-color .15s;
+}
+select:focus, input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-dim); }
+::placeholder { color: var(--fg2); opacity: 0.55; }
+.s-row select, .s-row input[type=number], .s-row input[type=text] { width: 7em; flex-shrink: 0; box-sizing: border-box; }
+.s-row .reset-btn, .s-row .close-srv-btn { min-width: 7em; text-align: center; box-sizing: border-box; }
+
+
+/* ── Save row ──────────────────────────────────────────────────── */
+.save-row { display: flex; align-items: center; gap: 10px; padding-top: 20px; justify-content: flex-end; }
+.reset-btn {
+  padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--border); background: transparent; color: var(--fg2);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.reset-btn:hover { border-color: var(--fg2); color: var(--fg); background: color-mix(in srgb, var(--fg2) 8%, transparent); }
+.close-srv-btn {
+  padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+  border: 1px solid #fca5a5; background: transparent; color: #ef4444;
+  transition: border-color .15s, background .15s;
+  margin-right: auto;
+}
+.close-srv-btn:hover { border-color: #ef4444; background: color-mix(in srgb, #ef4444 8%, transparent); }
+.save-btn {
+  background: transparent; color: var(--brand);
+  border: 1px solid var(--brand); border-radius: 8px; padding: 8px 22px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+}
+.save-btn:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); }
+.save-btn:active { background: color-mix(in srgb, var(--brand) 14%, transparent); }
+.save-ok { font-size: 12px; color: #16a34a; font-weight: 500; opacity: 0; transition: opacity .3s; }
+.save-ok.show { opacity: 1; }
+
+/* ── Skills table ───────────────────────────────────────────────── */
+.skills-ctrl { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.skills-search-input { flex: 1; min-width: 140px; }
+.sort-group { display: flex; gap: 3px; }
+.sort-btn { padding: 4px 10px; border: 1px solid var(--border); background: var(--bg2); border-radius: 6px; font-size: 12px; color: var(--fg2); cursor: pointer; transition: all .15s; }
+.sort-btn.active { background: var(--brand-dim); color: var(--brand); border-color: var(--brand); }
+.sort-btn:hover:not(.active) { border-color: var(--fg2); color: var(--fg); }
+.mode-btn-group { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+.prefix-suggestions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.prefix-suggest-label { color: var(--fg2); font-size: 11px; white-space: nowrap; }
+.prefix-chip { display: inline-block; padding: 2px 8px; border-radius: 12px; background: var(--brand-dim); color: var(--brand); font-size: 12px; font-family: monospace; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+.prefix-chip:hover { background: var(--brand); color: #fff; }
+.mode-btn { padding: 4px 12px; font-size: 12px; cursor: pointer; background: var(--bg2); color: var(--fg2); border: none; border-right: 1px solid var(--border); transition: all .15s; white-space: nowrap; line-height: 1.5; }
+.mode-btn:last-child { border-right: none; }
+.mode-btn.active { background: var(--brand-dim); color: var(--brand); }
+.mode-btn:hover:not(.active) { background: var(--bg3); color: var(--fg); }
+.skills-total { font-size: 11px; color: var(--fg2); margin-bottom: 6px; }
+/* Table header */
+.skills-table-header {
+  display: grid;
+  grid-template-columns: 28px 24px 140px 1fr 1fr 60px 100px 100px;
+  gap: 8px; padding: 4px 6px 6px;
+  border-bottom: 2px solid var(--border);
+  font-size: 11px; font-weight: 600; color: var(--fg2); text-transform: uppercase; letter-spacing: .04em;
+}
+/* Table rows */
+.skill-tbl-row {
+  display: grid;
+  grid-template-columns: 28px 24px 140px 1fr 1fr 60px 100px 100px;
+  gap: 8px; align-items: start;
+  padding: 7px 6px; border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+.stc-seq { font-size: 12px; color: var(--fg); text-align: left; font-variant-numeric: tabular-nums; }
+.skill-tbl-row:last-child { border-bottom: none; }
+.skill-tbl-row:hover { background: var(--bg2); border-radius: 6px; }
+.skill-tbl-row.is-pinned { background: var(--brand-dim); border-radius: 6px; }
+.skill-tbl-row.is-pinned:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }
+/* Cells */
+.stc-pin { font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.stc-name { font-family: monospace; font-size: 12px; color: var(--brand); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stc-desc { min-width: 0; display: flex; align-items: center; gap: 4px; }
+.stc-desc-text { font-size: 12px; color: var(--fg2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; line-height: 1.5; }
+.stc-desc-text:hover { color: var(--fg); white-space: normal; overflow: visible; text-overflow: clip; }
+.stc-desc-text.no-desc { font-style: italic; opacity: .5; }
+.stc-desc-input { flex: 1; min-width: 0; font-size: 12px; padding: 2px 6px; }
+.stc-count { font-size: 12px; color: var(--fg2); text-align: right; font-variant-numeric: tabular-nums; }
+.stc-date { font-size: 11px; color: var(--fg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 16px; }
+.stc-actions { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+/* Action buttons */
+.move-btn { width: 20px; height: 20px; border: 1px solid var(--border); background: var(--bg2); border-radius: 3px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: var(--fg2); transition: all .15s; flex-shrink: 0; }
+.move-btn:hover:not([disabled]) { border-color: var(--brand); color: var(--brand); }
+.move-btn[disabled] { opacity: .3; cursor: default; }
+.edit-btn { font-size: 12px; color: var(--fg2); background: none; border: none; cursor: pointer; padding: 1px 4px; border-radius: 4px; line-height: 1; flex-shrink: 0; }
+.edit-btn:hover { color: var(--brand); }
+.save-btn-sm { font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer; background: var(--brand); color: #fff; border: none; font-weight: 500; flex-shrink: 0; }
+.cancel-btn-sm { font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer; background: none; border: 1px solid var(--border); color: var(--fg2); flex-shrink: 0; }
+.pin-btn { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 4px; cursor: pointer; border: none; background: none;
+  font-size: 14px; padding: 0; transition: opacity .15s; flex-shrink: 0; opacity: .35; }
+.pin-btn:hover { opacity: .75; }
+.pin-btn.pinned { opacity: 1; }
+/* Pager */
+.pager { display: flex; align-items: center; justify-content: center; gap: 12px; padding-top: 16px; }
+.pager-btn { padding: 5px 14px; border: 1px solid var(--border); background: var(--bg2); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--fg); transition: border-color .15s; }
+.pager-btn:hover:not([disabled]) { border-color: var(--brand); color: var(--brand); }
+.pager-btn[disabled] { opacity: .4; cursor: default; }
+.pager-info { font-size: 12px; color: var(--fg2); }
+/* Sub-table (unused + blacklist) — aligns with main skills table columns */
+.sub-tbl-cols { grid-template-columns: 28px 24px minmax(0,140px) minmax(0,1fr) auto; }
+.sub-tbl-hdr {
+  display: grid; gap: 8px; padding: 4px 6px 6px;
+  border-bottom: 2px solid var(--border);
+  font-size: 11px; font-weight: 600; color: var(--fg2); text-transform: uppercase; letter-spacing: .04em;
+}
+.sub-tbl-row {
+  display: grid; gap: 8px; align-items: center;
+  padding: 7px 6px; border-bottom: 1px solid var(--border);
+}
+.sub-tbl-row:last-child { border-bottom: none; }
+.sub-tbl-row:hover { background: var(--bg2); border-radius: 6px; }
+.sub-tbl-empty { font-size: 12px; color: var(--fg3,var(--fg2)); font-style: italic; padding: 6px 0; }
+.sub-seq { font-size: 12px; color: var(--fg); text-align: left; font-variant-numeric: tabular-nums; }
+.sub-name { font-family: monospace; font-size: 12px; color: var(--brand); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub-desc { font-size: 12px; color: var(--fg2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub-actions { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.card-title.collapsible { cursor: pointer; user-select: none; margin-bottom: 0; }
+.card-title.collapsible + * { margin-top: 14px; }
+.collapse-arrow { margin-left: auto; font-size: 10px; opacity: .45; }
+.bl-btn, .unbl-btn { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 4px; cursor: pointer; border: none; background: none; color: var(--fg2);
+  font-size: 13px; padding: 0; transition: color .15s; flex-shrink: 0; }
+.bl-btn:hover { color: #dc2626; }
+.unbl-btn:hover { color: var(--brand); }
+</style>
+<script src="/locales/bundle.js"></script>
+</head>
+<body>
+
+<div id="update-banner">
+  <div class="banner-inner">
+    <div class="banner-body">
+      <div class="banner-title" id="banner-title"></div>
+      <div class="banner-notes" id="banner-notes"></div>
+    </div>
+    <div class="banner-actions">
+      <span id="banner-upgrade-result" style="font-size:12px"></span>
+      <button class="reset-btn" id="banner-upgrade-btn" onclick="doUpgrade()" style="color:var(--banner-title);border-color:var(--banner-border)"></button>
+      <button class="banner-dismiss-btn" onclick="dismissBanner()" title="Dismiss">×</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="9"  width="3" height="6" rx="1" fill="white" opacity=".5"/>
+        <rect x="6" y="5"  width="3" height="10" rx="1" fill="white" opacity=".75"/>
+        <rect x="11" y="1" width="4" height="14" rx="1" fill="white"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">skill-habit</div>
+      <div class="brand-desc" id="brand-desc"></div>
+    </div>
+  </div>
+  <div class="header-chips" id="hchips"></div>
+</header>
+
+<nav>
+  <button class="active" data-tab="skills"   onclick="sw('skills')">—</button>
+  <button               data-tab="analytics" onclick="sw('analytics')">—</button>
+  <button               data-tab="settings"  onclick="sw('settings')">—</button>
+  <div id="global-tw-bar"></div>
+</nav>
+
+<main>
+  <div id="tab-skills"    class="tab-panel active"></div>
+  <div id="tab-analytics" class="tab-panel"></div>
+  <div id="tab-settings"  class="tab-panel"></div>
+</main>
+
+<script>
+/* ── i18n: locale files loaded via <script> tags above ─────────── */
+const T = window._T || {}
+let cfg = {}, cache = {}, lang = 'en', hmWeeks = 52, _versionResult = null, _saveTimer = null
+
+function autoSave(delay) {
+  clearTimeout(_saveTimer)
+  _saveTimer = setTimeout(saveSettings, delay === undefined ? 600 : delay)
+}
+function _versionHtml() {
+  if (!_versionResult) return ''
+  if (_versionResult.error && !_versionResult.has_update)
+    return `<span style="color:var(--fg2)">v${_versionResult.current}</span>`
+  const level = _versionResult.update_level
+  if (level === 'major')
+    return `<span style="color:#ef4444">${t('update_major')} — ${_versionResult.current} → ${_versionResult.latest}</span>`
+  if (level === 'patch')
+    return `<span style="color:#f59e0b">${t('update_patch')} — ${_versionResult.current} → ${_versionResult.latest}</span>`
+  return `<span style="color:#16a34a">✓ ${t('up_to_date')} (${_versionResult.current})</span>`
+}
+const t = k => (T[lang] || T.en)[k] ?? k
+// tf(key, vars): replace {name} placeholders; if vars is a number, support "singular|plural" with {n}
+function tf(key, vars) {
+  let s = t(key)
+  if (typeof vars === 'number') {
+    const parts = s.split('|')
+    s = (vars === 1 && parts.length > 1) ? parts[0] : parts[parts.length - 1]
+    return s.replace('{n}', vars)
+  }
+  for (const [k, v] of Object.entries(vars || {})) s = s.replaceAll(`{${k}}`, v)
+  return s
+}
+
+function detectLang() {
+  const saved = cfg.language
+  if (saved && saved !== 'auto' && T[saved]) return saved
+  const nav = (navigator.language || '').toLowerCase()
+  for (const [code, loc] of Object.entries(T)) {
+    if (loc._meta && nav.startsWith(loc._meta.nav) && code !== 'en') return code
+  }
+  return 'en'
+}
+
+/* ── Boot ──────────────────────────────────────────────────────── */
+async function init() {
+  [cfg, cache] = await Promise.all([
+    fetch('/api/config').then(r => r.json()),
+    fetch('/api/cache').then(r => r.json()).catch(() => ({}))
+  ])
+  lang = detectLang()
+  document.documentElement.dataset.theme = cfg.theme || 'system'
+  renderAll()
+  const tabs = ['skills', 'analytics', 'settings']
+  const hash = location.hash.replace('#', '')
+  if (tabs.includes(hash)) sw(hash)
+  refreshStats()
+  setInterval(() => { if (!document.hidden) refreshStats() }, 30000)
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshStats() })
+  _silentVersionCheck()
+}
+
+function renderChips() {
+  const s = cache.stats || {}
+  const el = document.getElementById('hchips')
+  if (el) el.innerHTML = `
+    <div class="chip">${s.total_invocations || 0} ${t('total')}</div>
+    <div class="chip">${s.unique_skills     || 0} ${t('unique_skills')}</div>
+    <div class="chip">${s.unique_sessions   || 0} ${t('sessions')}</div>`
+}
+
+async function refreshStats() {
+  const s = await fetch('/api/stats').then(r => r.json()).catch(() => null)
+  if (!s) return
+  cache.stats = s
+  renderChips()
+}
+
+function renderAll() {
+  renderNav()
+  renderChips()
+  renderTwBar()
+  renderSkills()
+  renderAnalytics()
+  renderSettings()
+}
+
+function renderTwBar() {
+  const tw = cache.time_window || 'all'
+  document.getElementById('global-tw-bar').innerHTML = `
+    <label>${t('tw_label')}:</label>
+    <select onchange="refreshA(this.value)">
+      <option value="all"      ${tw==='all'||!tw?'selected':''}>${t('tw_all')}</option>
+      <option value="halfyear" ${tw==='halfyear'?'selected':''}>${t('tw_halfyear')}</option>
+      <option value="month"    ${tw==='month'?'selected':''}>${t('tw_month')}</option>
+      <option value="week"     ${tw==='week'?'selected':''}>${t('tw_week')}</option>
+      <option value="today"    ${tw==='today'?'selected':''}>${t('tw_today')}</option>
+    </select>`
+}
+
+function renderNav() {
+  document.querySelector('[data-tab="skills"]').textContent    = t('tab_skills')
+  document.querySelector('[data-tab="analytics"]').textContent = t('tab_analytics')
+  document.querySelector('[data-tab="settings"]').textContent  = t('tab_settings')
+  const desc = document.getElementById('brand-desc')
+  if (desc) desc.textContent = t('brand_desc')
+}
+
+
+
+function sw(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'))
+  document.getElementById(`tab-${name}`).classList.add('active')
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active')
+  // Hide time window bar on Settings tab
+  const twBar = document.getElementById('global-tw-bar')
+  if (twBar) twBar.style.display = name === 'settings' ? 'none' : 'flex'
+  if (name === 'settings') { setTimeout(checkUpdate, 100) }
+  location.hash = name
+}
+
+/* ── Skills table ───────────────────────────────────────────────── */
+let skillsState = { page: 1, per_page: 10, sort: 'count', sortDir: 'desc', q: '', data: null, editing: null, editValue: '' }
+let _searchTimer = null
+
+async function renderSkills() {
+  const { page, per_page, sort, sortDir, q } = skillsState
+  const url = `/api/skills?page=${page}&per_page=${per_page}&sort=${sort}&sort_dir=${sortDir}${q ? '&q=' + encodeURIComponent(q) : ''}`
+  const [data] = await Promise.all([
+    fetch(url).then(r => r.json()).catch(() => null),
+    _loadBlacklist(),
+    _loadUnusedSkills(),
+  ])
+  skillsState.data = data
+  _renderSkillsDom()
+}
+
+function _renderSkillsDom() {
+  const _hadSearchFocus = document.activeElement?.classList?.contains('skills-search-input')
+  const _searchCursorStart = _hadSearchFocus ? document.activeElement.selectionStart : null
+  const _searchCursorEnd   = _hadSearchFocus ? document.activeElement.selectionEnd   : null
+  const data   = skillsState.data
+  const pinned = cfg.pinned_skills || []
+  const prefix = cfg.prefix || 'sh'
+  const el     = document.getElementById('tab-skills')
+
+  // Only show skills that have been used (count > 0), plus pinned skills; exclude blacklisted
+  const allSkills = data ? (data.skills || []) : []
+  const _bl = new Set(cfg.blacklist || [])
+  const skills = allSkills.filter(s => (s.count > 0 || s.is_pinned) && !_bl.has(s.name))
+
+  if (!data || (!skills.length && !skillsState.q)) {
+    el.innerHTML = `<div class="card">${_emptySkillsHTML()}</div>${_unusedCard()}${_blacklistCard()}`
+    return
+  }
+
+  const totalPages = Math.ceil(skills.length / skillsState.per_page) || 1
+
+  const sb = (k, lk) => {
+    const isActive = skillsState.sort === k
+    const dir = isActive ? (skillsState.sortDir === 'desc' ? ' ↓' : ' ↑') : ''
+    return `<button class="sort-btn ${isActive?'active':''}" onclick="skillsSort('${k}')">${t(lk)}${dir}</button>`
+  }
+  const controls = `
+    <div class="skills-ctrl">
+      <input type="text" class="skills-search-input" placeholder="${t('search_skills')}"
+             value="${_esc(skillsState.q)}" oninput="skillsSearch(this.value)">
+      <div class="sort-group">${sb('count','sort_count')}${sb('last_used','sort_last_used')}${sb('name','sort_name')}</div>
+    </div>`
+
+  const rows = skills.length
+    ? _skillsTableHeader() + skills.map((s, i) => _skillRow(s, pinned, prefix, (skillsState.page - 1) * skillsState.per_page + i + 1)).join('')
+    : `<div class="card-hint" style="text-align:center;padding:20px 0">${t('no_results')}</div>`
+
+  const pager = totalPages > 1 ? `
+    <div class="pager">
+      <button class="pager-btn" onclick="skillsPage(${skillsState.page-1})" ${skillsState.page<=1?'disabled':''}>◀</button>
+      <span class="pager-info">${skillsState.page} / ${totalPages}</span>
+      <button class="pager-btn" onclick="skillsPage(${skillsState.page+1})" ${skillsState.page>=totalPages?'disabled':''}>▶</button>
+    </div>` : ''
+
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-title"><div class="card-icon">📊</div>${t('skills_title')} (${skills.length})</div>
+      <p class="card-hint">${t('skills_hint')}</p>
+      ${controls}${rows}${pager}
+    </div>
+    ${_unusedCard()}
+    ${_blacklistCard()}`
+
+  if (_hadSearchFocus) {
+    const inp = el.querySelector('.skills-search-input')
+    if (inp) { inp.focus(); if (_searchCursorStart !== null) inp.setSelectionRange(_searchCursorStart, _searchCursorEnd) }
+  }
+}
+
+function _skillsTableHeader() {
+  return `<div class="skills-table-header">
+    <div style="opacity:.5">${t('col_num')}</div>
+    <div></div>
+    <div>${t('col_command')}</div>
+    <div>${t('col_desc')}</div>
+    <div>${t('col_orig_desc')}</div>
+    <div style="text-align:right">${t('col_count')}</div>
+    <div style="padding-left:16px">${t('col_last_used')}</div>
+    <div style="text-align:right">${t('col_actions')}</div>
+  </div>`
+}
+
+function _fmtDate(ts) {
+  if (!ts) return t('never_used')
+  const now = Date.now() / 1000
+  const diff = now - ts
+  if (diff < 86400)   return t('today')
+  if (diff < 172800)  return t('yesterday')
+  const days = Math.floor(diff / 86400)
+  if (days < 30)  return tf('rel_days', days)
+  const mo = Math.floor(days / 30)
+  if (days < 365) return tf('rel_months', mo)
+  return tf('rel_years', Math.floor(days / 365))
+}
+
+function _skillRow(skill, pinned, prefix, idx) {
+  const isPinned  = skill.is_pinned
+  const pinIdx    = isPinned ? pinned.indexOf(skill.name) : -1
+  const canUp     = isPinned && pinIdx > 0
+  const canDown   = isPinned && pinIdx >= 0 && pinIdx < pinned.length - 1
+  const isEditing = skillsState.editing === skill.name
+  const safeDesc  = _esc(skill.description || '')
+  const safeName  = _esc(skill.name)
+
+  // Description cell (custom, editable)
+  let descCell
+  if (isEditing) {
+    descCell = `<div class="stc-desc">
+      <input id="desc-edit-${safeName}" class="stc-desc-input"
+             value="${_esc(skillsState.editValue)}"
+             oninput="skillsState.editValue=this.value"
+             onkeydown="descKey(event,'${safeName}')"
+             onblur="blurSave('${safeName}')"
+             onmousedown="event.stopPropagation()">
+    </div>`
+  } else {
+    const descEl = skill.description
+      ? `<span class="stc-desc-text" data-skill="${safeName}" data-desc="${safeDesc}" ondblclick="startEditFromEl(this)" title="${t('edit_desc')}">${_esc(skill.description)}</span>`
+      : `<span class="stc-desc-text no-desc" data-skill="${safeName}" data-desc="" ondblclick="startEditFromEl(this)" title="${t('edit_desc')}">${t('no_desc')}</span>`
+    descCell = `<div class="stc-desc">${descEl}</div>`
+  }
+
+  // Original description cell (read-only, hover to expand)
+  const origDesc = skill.original_description || ''
+  const origCell = `<div class="stc-desc">
+    <span class="stc-desc-text ${origDesc?'':'no-desc'}">${origDesc ? _esc(origDesc) : '—'}</span>
+  </div>`
+
+  return `<div class="skill-tbl-row ${isPinned?'is-pinned':''} ${isEditing?'is-editing':''}">
+    <div class="stc-seq">${idx}</div>
+    <div class="stc-pin">${isPinned ? '📌' : ''}</div>
+    <div class="stc-name" title="/${prefix}:${skill.name}">${_esc(skill.name)}</div>
+    ${descCell}
+    ${origCell}
+    <div class="stc-count">${skill.count > 0 ? skill.count : '—'}</div>
+    <div class="stc-date">${_fmtDate(skill.last_used)}</div>
+    <div class="stc-actions">
+      ${!isEditing ? `
+      <button class="pin-btn ${isPinned?'pinned':''}" onclick="togglePin('${safeName}')" title="${isPinned?t('unpin'):t('pin')}">📌</button>
+      ${isPinned && pinned.length > 1 ? `
+      <button class="move-btn" onclick="movePin('${safeName}','up')" ${canUp?'':'disabled'} title="↑">↑</button>
+      <button class="move-btn" onclick="movePin('${safeName}','down')" ${canDown?'':'disabled'} title="↓">↓</button>` : ''}
+      <button class="edit-btn" data-skill="${safeName}" data-desc="${safeDesc}" onmousedown="event.preventDefault();startEditFromEl(this)" title="${t('edit_desc')}">✏️</button>
+      ${!cfg.blacklist?.includes(skill.name) ? `<button class="bl-btn" onclick="addToBlacklist('${safeName}')" title="${t('add_to_blacklist')}">⊘</button>` : ''}
+      ` : ''}
+    </div>
+  </div>`
+}
+
+function _emptySkillsHTML() {
+  return `<div class="empty-state">
+    <div class="empty-icon">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+        <rect x="2"  y="20" width="7" height="12" rx="2" fill="var(--brand)" opacity=".3"/>
+        <rect x="13" y="13" width="7" height="19" rx="2" fill="var(--brand)" opacity=".6"/>
+        <rect x="25" y="5"  width="7" height="27" rx="2" fill="var(--brand)" opacity=".9"/>
+        <path d="M5.5 20 L16.5 13 L28.5 5" stroke="var(--brand)" stroke-width="1.5"
+              stroke-dasharray="3 2.5" stroke-linecap="round" opacity=".4"/>
+      </svg>
+    </div>
+    <div class="empty-title">${t('empty_title')}</div>
+    <div class="empty-desc">${t('empty_desc')}</div>
+    <ol class="empty-steps">
+      <li>${t('empty_s1')}</li><li>${t('empty_s2')}</li><li>${t('empty_s3')}</li>
+    </ol>
+  </div>`
+}
+
+function skillsSearch(val) {
+  clearTimeout(_searchTimer)
+  _searchTimer = setTimeout(() => { skillsState.q = val; skillsState.page = 1; renderSkills() }, 300)
+}
+function skillsSort(s) {
+  if (s === skillsState.sort) {
+    skillsState.sortDir = skillsState.sortDir === 'desc' ? 'asc' : 'desc'
+  } else {
+    skillsState.sort = s
+    skillsState.sortDir = s === 'name' ? 'asc' : 'desc'
+  }
+  skillsState.page = 1; renderSkills()
+}
+function skillsPage(p) { skillsState.page = p; renderSkills() }
+
+function startEditFromEl(el) {
+  const name = el.dataset.skill, desc = el.dataset.desc || ''
+  skillsState.editing = name; skillsState.editValue = desc
+  _renderSkillsDom()
+  requestAnimationFrame(() => { const i = document.getElementById('desc-edit-' + name); if (i) { i.focus(); i.select() } })
+}
+function cancelEdit() { if (!skillsState.editing) return; skillsState.editing = null; _renderSkillsDom() }
+function blurSave(name) { if (!skillsState.editing) return; saveDesc(name) }
+
+async function saveDesc(name) {
+  const custom = { ...(cfg.custom_descriptions || {}), [name]: skillsState.editValue }
+  await fetch('/api/config', { method: 'POST', body: JSON.stringify({ custom_descriptions: custom }) })
+  cfg.custom_descriptions = custom
+  if (skillsState.data) { const s = skillsState.data.skills.find(x => x.name === name); if (s) s.description = skillsState.editValue }
+  skillsState.editing = null; _renderSkillsDom()
+}
+function descKey(e, name) {
+  skillsState.editValue = e.target.value
+  if (e.key === 'Enter') { e.preventDefault(); saveDesc(name) }
+  if (e.key === 'Escape') { e.preventDefault(); cancelEdit() }
+}
+
+/* ── Blacklist ───────────────────────────────────────────────────── */
+let blState = { page: 1, per_page: 10, data: null, open: false }
+let unusedState = { open: false, data: null, page: 1, per_page: 10 }
+
+async function _loadBlacklist() {
+  const { page, per_page } = blState
+  blState.data = await fetch(`/api/blacklist?page=${page}&per_page=${per_page}`).then(r => r.json()).catch(() => null)
+}
+
+async function _loadUnusedSkills() {
+  const d = await fetch('/api/skills?per_page=999&sort=name&sort_dir=asc').then(r => r.json()).catch(() => null)
+  const bl = new Set(cfg.blacklist || [])
+  unusedState.data = d ? (d.skills || []).filter(s => s.count === 0 && !s.is_pinned && !bl.has(s.name)) : []
+  unusedState.page = 1
+}
+
+function _subTblHeader() {
+  return `<div class="sub-tbl-hdr sub-tbl-cols">
+    <div style="opacity:.5">${t('col_num')}</div>
+    <div></div>
+    <div>${t('col_command')}</div>
+    <div>${t('col_desc')}</div>
+    <div style="text-align:right">${t('col_actions')}</div>
+  </div>`
+}
+
+function _pager(cur, total, onPrev, onNext) {
+  return total > 1 ? `<div class="pager">
+    <button class="pager-btn" onclick="${onPrev}" ${cur<=1?'disabled':''}>◀</button>
+    <span class="pager-info">${cur} / ${total}</span>
+    <button class="pager-btn" onclick="${onNext}" ${cur>=total?'disabled':''}>▶</button>
+  </div>` : ''
+}
+
+function _blListHtml() {
+  const d = blState.data
+  if (!d || !d.items || !d.items.length)
+    return `<div class="sub-tbl-empty">${t('blacklist_empty')}</div>`
+  const totalPages = Math.ceil(d.total / blState.per_page)
+  const offset = (blState.page - 1) * blState.per_page
+  const rows = d.items.map((item, i) => `
+    <div class="sub-tbl-row sub-tbl-cols">
+      <span class="sub-seq">${offset + i + 1}</span>
+      <span></span>
+      <span class="sub-name">/${_esc(item.name)}</span>
+      <span class="sub-desc">${_esc(item.description || '')}</span>
+      <div class="sub-actions">
+        <button class="unbl-btn" onclick="removeFromBlacklist('${_esc(item.name)}')" title="${t('remove_from_blacklist')}">✕</button>
+      </div>
+    </div>`).join('')
+  return _subTblHeader() + rows + _pager(blState.page, totalPages, `blPage(${blState.page-1})`, `blPage(${blState.page+1})`)
+}
+
+function _blacklistCard() {
+  const count = blState.data?.total || 0
+  const badge = count > 0 ? ` (${count})` : ''
+  return `<div class="card" id="blacklist-card">
+    <div class="card-title collapsible" onclick="toggleBlSection()">
+      <div class="card-icon">🚫</div>${t('blacklist_title')}${badge}
+      <span class="collapse-arrow">${blState.open ? '▲' : '▼'}</span>
+    </div>
+    ${blState.open ? `<p class="card-hint">${t('blacklist_hint')}</p>${_blListHtml()}` : ''}
+  </div>`
+}
+
+function _unusedCard() {
+  const data = unusedState.data
+  const badge = data !== null ? ` (${data.length})` : ''
+  let body = ''
+  if (unusedState.open) {
+    if (!data) {
+      body = `<p class="card-hint">…</p>`
+    } else if (data.length === 0) {
+      body = `<p class="card-hint" style="font-style:italic">${t('unused_empty')}</p>`
+    } else {
+      const { page, per_page } = unusedState
+      const totalPages = Math.ceil(data.length / per_page) || 1
+      const slice = data.slice((page - 1) * per_page, page * per_page)
+      const offset = (page - 1) * per_page
+      body = `<p class="card-hint">${t('unused_hint')}</p>` +
+        _subTblHeader() +
+        slice.map((s, i) => `<div class="sub-tbl-row sub-tbl-cols">
+          <span class="sub-seq">${offset + i + 1}</span>
+          <span></span>
+          <span class="sub-name">/${_esc(s.name)}</span>
+          <span class="sub-desc">${_esc(s.description || '')}</span>
+          <div class="sub-actions">
+            <button class="pin-btn" onclick="togglePin('${_esc(s.name)}')" title="${t('pin')}">📌</button>
+            <button class="bl-btn" onclick="addToBlacklist('${_esc(s.name)}')" title="${t('add_to_blacklist')}">⊘</button>
+          </div>
+        </div>`).join('') +
+        _pager(page, totalPages, `unusedPage(${page-1})`, `unusedPage(${page+1})`)
+    }
+  }
+  return `<div class="card">
+    <div class="card-title collapsible" onclick="toggleUnused()">
+      <div class="card-icon">📦</div>${t('unused_title')}${badge}
+      <span class="collapse-arrow">${unusedState.open ? '▲' : '▼'}</span>
+    </div>
+    ${body}
+  </div>`
+}
+
+function toggleBlSection() { blState.open = !blState.open; _renderSkillsDom() }
+function toggleUnused()    { unusedState.open = !unusedState.open; _renderSkillsDom() }
+function unusedPage(p)     { unusedState.page = p; _renderSkillsDom() }
+
+async function blPage(p) { blState.page = p; await _loadBlacklist(); _renderSkillsDom() }
+
+async function addToBlacklist(name) {
+  await fetch('/api/blacklist/add', { method: 'POST', body: JSON.stringify({ skill: name }) })
+  if (cfg.blacklist) cfg.blacklist.push(name); else cfg.blacklist = [name]
+  // If pinned, unpin it — blacklist takes precedence
+  if (cfg.pinned_skills?.includes(name)) {
+    cfg.pinned_skills = cfg.pinned_skills.filter(x => x !== name)
+    await fetch('/api/config', { method: 'POST', body: JSON.stringify({ pinned_skills: cfg.pinned_skills }) })
+  }
+  blState.page = 1
+  await renderSkills()
+}
+
+async function removeFromBlacklist(name) {
+  await fetch('/api/blacklist/remove', { method: 'POST', body: JSON.stringify({ skill: name }) })
+  if (cfg.blacklist) cfg.blacklist = cfg.blacklist.filter(x => x !== name)
+  await Promise.all([_loadBlacklist(), _loadUnusedSkills()])
+  _renderSkillsDom()
+}
+
+async function togglePin(skill) {
+  const pinned = [...(cfg.pinned_skills || [])]
+  const idx = pinned.indexOf(skill)
+  if (idx >= 0) pinned.splice(idx, 1); else pinned.unshift(skill)
+  cfg.pinned_skills = pinned
+  await fetch('/api/config', { method: 'POST', body: JSON.stringify({ pinned_skills: pinned }) })
+  renderSkills()
+}
+async function movePin(name, dir) {
+  const pinned = [...(cfg.pinned_skills || [])]
+  const idx = pinned.indexOf(name); if (idx < 0) return
+  const ni = dir === 'up' ? idx - 1 : idx + 1; if (ni < 0 || ni >= pinned.length) return
+  pinned.splice(idx, 1); pinned.splice(ni, 0, name)
+  cfg.pinned_skills = pinned
+  await fetch('/api/config', { method: 'POST', body: JSON.stringify({ pinned_skills: pinned }) })
+  renderSkills()
+}
+
+function _esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') }
+
+/* ── Analytics ─────────────────────────────────────────────────── */
+function renderAnalytics() {
+  const cards = cfg.analytics_cards || {}
+  let html = ''
+
+  const gridCards = []
+  if (cards.top_skills !== false) gridCards.push(mkTopSkills())
+  if (cards.transition_graph !== false) gridCards.push(mkTransitionGraph())
+
+  // Hourly + weekday always paired on the same row
+  const distCards = []
+  if (cards.hourly_distribution !== false)  distCards.push(mkChart(cache.hourly_distribution||[], 'hourly_title', '🕐', d=>d.hour, d=>d.count))
+  if (cards.weekday_distribution !== false) distCards.push(mkChart(cache.weekday_distribution||[], 'weekday_title', '📅', d=>d.day, d=>d.count))
+  if (distCards.length === 2) gridCards.push(`<div class="dist-pair">${distCards.join('')}</div>`)
+  else if (distCards.length === 1) gridCards.push(distCards[0])
+
+  if (gridCards.length === 1) {
+    html += gridCards[0]
+  } else if (gridCards.length > 1) {
+    html += `<div class="analytics-grid">${gridCards.join('')}</div>`
+  }
+
+  // Heatmap always at the bottom (full width)
+  if (cards.heatmap !== false) html += mkHeatmap()
+
+  document.getElementById('tab-analytics').innerHTML = html
+}
+
+async function refreshA(tw) {
+  const data = await fetch(`/api/cache?time_window=${tw}`).then(r => r.json()).catch(() => ({}))
+  cache = { ...cache, ...data, time_window: tw }
+  renderTwBar()
+  renderAnalytics()
+  renderSkills()
+}
+
+async function setHmWeeks(n) {
+  hmWeeks = n
+  cache.heatmap = await fetch(`/api/heatmap?weeks=${n}`).then(r => r.json()).catch(() => [])
+  renderAnalytics()
+}
+
+function mkHeatmap() {
+  const data = cache.heatmap || []
+  const MONTHS = t('hm_months')
+  const DAY_LABELS = t('hm_day_labels')
+
+  const selector = `<div class="mode-btn-group hm-week-select">
+    <button class="mode-btn ${hmWeeks===13?'active':''}" onclick="setHmWeeks(13)">${t('hm_3mo')}</button>
+    <button class="mode-btn ${hmWeeks===26?'active':''}" onclick="setHmWeeks(26)">${t('hm_6mo')}</button>
+    <button class="mode-btn ${hmWeeks===52?'active':''}" onclick="setHmWeeks(52)">${t('hm_1yr')}</button>
+  </div>`
+
+  if (!data.length) return `<div class="card" style="opacity:.55"><div class="card-title"><div class="card-icon">🌡</div>${t('heatmap_title')}${selector}</div><p class="card-hint" style="margin-top:10px">${t('empty_title')}</p></div>`
+
+  const byDate = Object.fromEntries(data.map(d => [d.date, d.count]))
+  const max = Math.max(...data.map(d => d.count), 1)
+  const today = new Date(); today.setHours(0,0,0,0)
+
+  // Start from the Sunday of the week that is hmWeeks ago
+  const startSun = new Date(today)
+  startSun.setDate(today.getDate() - today.getDay() - (hmWeeks - 1) * 7)
+
+  const CELL = 12, GAP = 3, COL = CELL + GAP  // 15px per column
+  const cells = [], monthLabels = []
+  let lastMonth = -1, lastYear = -1
+
+  for (let w = 0; w < hmWeeks; w++) {
+    const wSun = new Date(startSun); wSun.setDate(startSun.getDate() + w * 7)
+    const m = wSun.getMonth(), y = wSun.getFullYear()
+    if (m !== lastMonth) {
+      monthLabels.push({ col: w, label: MONTHS[m] })
+      lastMonth = m; lastYear = y
+    }
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(wSun); date.setDate(wSun.getDate() + d)
+      const k = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+      const future = date > today
+      const c = byDate[k] || 0
+      const l = (future || c === 0) ? 0 : c < max*.25 ? 1 : c < max*.5 ? 2 : c < max*.75 ? 3 : 4
+      cells.push(`<div class="hm-cell" data-l="${l}" ${!future ? `title="${k}: ${c}"` : ''}></div>`)
+    }
+  }
+
+  // Skip labels that would collide with the previous one (min 28px apart)
+  const monthBar = monthLabels.reduce((acc, m, i) => {
+    const prev = acc[acc.length - 1]
+    if (!prev || (m.col - prev.col) * COL >= 28) acc.push(m)
+    return acc
+  }, []).map(m => `<span class="hm-month-label" style="left:${m.col * COL}px">${m.label}</span>`).join('')
+  // Separator lines at each month boundary (except the first column)
+  const separatorLines = monthLabels.slice(1).map(m =>
+    `<div class="hm-sep-line" style="left:${m.col * COL - 2}px"></div>`
+  ).join('')
+  const dayLabelHtml = DAY_LABELS.map(d => `<div class="hm-day-lbl">${d}</div>`).join('')
+  const legend = `<div class="hm-legend">
+    <span>${t('hm_less')}</span>
+    ${[0,1,2,3,4].map(l=>`<div class="hm-cell" data-l="${l}"></div>`).join('')}
+    <span>${t('hm_more')}</span>
+  </div>`
+
+  return `<div class="card">
+    <div class="card-title"><div class="card-icon">🌡</div>${t('heatmap_title')}${selector}</div>
+    <div class="hm-outer">
+      <div class="hm-day-labels">${dayLabelHtml}</div>
+      <div class="hm-right">
+        <div class="hm-months">${monthBar}</div>
+        <div class="hm-grid-wrapper">
+          <div class="heatmap">${cells.join('')}</div>
+          ${separatorLines}
+        </div>
+        ${legend}
+      </div>
+    </div>
+  </div>`
+}
+
+function _isDarkMode() {
+  const theme = document.documentElement.dataset.theme || 'system'
+  if (theme === 'dark') return true
+  if (theme === 'light') return false
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+function _rankColor(rank, total) {
+  const t = total > 1 ? (rank - 1) / (total - 1) : 0  // 0=first/highest, 1=last/lowest
+  let r1, g1, b1, r2, g2, b2
+  if (_isDarkMode()) {
+    // dark: rank1=lightest (#86efac), rankN=darkest (#166534)
+    r1=134; g1=239; b1=172
+    r2=22;  g2=101; b2=52
+  } else {
+    // light: rank1=darkest (#14532d), rankN=lightest (#bbf7d0)
+    r1=20;  g1=83;  b1=45
+    r2=187; g2=247; b2=208
+  }
+  return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`
+}
+
+function mkTopSkills() {
+  const top = cache.top_skills || []
+  if (!top.length) return mkEmptyCard('top_skills_title', '📊')
+  const max = top[0]?.count || 1
+  const rows = top.map((item, i) => {
+    const ratio = item.count / max
+    const color = _rankColor(i + 1, top.length)
+    return `
+    <div class="skill-row" style="grid-template-columns:32px 1fr 110px 44px">
+      <div class="rank-badge">${i+1}</div>
+      <div class="skill-name" style="white-space:normal;overflow:visible;word-break:break-all">${item.skill}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(ratio*100)}%;background:${color}"></div></div>
+      <div class="count-lbl">${item.count}</div>
+    </div>`
+  }).join('')
+  return mkCard('top_skills_title', '📊', rows)
+}
+
+function niceTicks(max, n) {
+  if (!max) return [0]
+  const raw = max / n
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)))
+  const step = [1, 2, 5, 10].map(s => s * mag).find(s => s >= raw) || raw
+  const result = []
+  for (let v = 0; v <= max; v += step) result.push(Math.round(v))
+  return result
+}
+
+function mkChart(data, titleKey, icon, labelFn, valFn) {
+  if (!data.length) return mkEmptyCard(titleKey, icon)
+  const total = data.reduce((s, d) => s + valFn(d), 0)
+  if (!total) return mkEmptyCard(titleKey, icon)
+  const max = Math.max(...data.map(valFn), 1)
+  const BAR_H = 100
+  const ticks = niceTicks(max, 4)
+  const cols = data.map(d =>
+    `<div class="bcc" data-tip="${valFn(d)}"><div class="bcb" style="height:${Math.max(4, Math.round(valFn(d)/max*BAR_H))}px"></div><div class="bcl">${labelFn(d)}</div></div>`
+  ).join('')
+  const gridLines = ticks.map(v =>
+    `<div class="gl" style="bottom:${Math.round(v/max*BAR_H)}px"></div>`
+  ).join('')
+  const yLabels = ticks.map(v =>
+    `<div class="yl" style="bottom:${Math.round(v/max*BAR_H)}px">${v}</div>`
+  ).join('')
+  return mkCard(titleKey, icon, `<div class="bc-wrap"><div class="bc-yax">${yLabels}</div><div class="bc-area">${gridLines}<div class="bar-chart">${cols}</div></div></div>`)
+}
+
+function mkCard(titleKey, icon, body) {
+  return `<div class="card"><div class="card-title"><div class="card-icon">${icon}</div>${t(titleKey)}</div>${body}</div>`
+}
+function mkEmptyCard(titleKey, icon) {
+  return `<div class="card" style="opacity:.55"><div class="card-title"><div class="card-icon">${icon}</div>${t(titleKey)}</div><p class="card-hint" style="margin-top:10px">${t('empty_title')}</p></div>`
+}
+
+function mkTransitionGraph() {
+  const matrix = cache.transition_matrix || {}
+  if (!Object.keys(matrix).length) return mkEmptyCard('transition_graph', '🔮')
+
+  // Find start node: highest total outgoing transitions
+  let startNode = null, maxOut = 0
+  for (const [from, tos] of Object.entries(matrix)) {
+    const total = Object.values(tos).reduce((a, b) => a + b, 0)
+    if (total > maxOut) { maxOut = total; startNode = from }
+  }
+
+  // Greedy path: always pick highest-count unvisited next node
+  const path = [startNode]
+  const visited = new Set([startNode])
+  let cur = startNode
+  while (path.length < (cfg.prediction_n ?? 5) + 1) {
+    const nexts = matrix[cur]
+    if (!nexts) break
+    let best = null, bestCount = 0
+    for (const [to, count] of Object.entries(nexts)) {
+      if (!visited.has(to) && count > bestCount) { bestCount = count; best = to }
+    }
+    if (!best) break
+    path.push(best); visited.add(best); cur = best
+  }
+
+  const nodes = path.map((skill, i) => {
+    const arrow = i < path.length - 1 ? `<span class="tg-arrow">→</span>` : ''
+    return `<span class="tg-node">${skill}</span>${arrow}`
+  }).join('')
+
+  const hint = tf('tg_hint', path.length - 1)
+
+  return mkCard('transition_graph', '🔮',
+    `<div class="tg-chain">${nodes}</div><div class="tg-hint">${hint}</div>`)
+}
+
+function toggleCard(key, checked) {
+  if (!cfg.analytics_cards) cfg.analytics_cards = {}
+  cfg.analytics_cards[key] = checked
+  renderAnalytics()
+  autoSave(0)
+}
+
+function validatePrefix(input) {
+  const val = input.value
+  const err = document.getElementById('prefix-error')
+  if (!err) return true
+  if (!val.trim()) {
+    err.textContent = t('err_prefix_empty')
+    err.style.display = 'block'
+    input.style.borderColor = '#ef4444'
+    return false
+  }
+  if (!/^[a-zA-Z0-9_-]+$/.test(val)) {
+    err.textContent = t('err_prefix_chars')
+    err.style.display = 'block'
+    input.style.borderColor = '#ef4444'
+    return false
+  }
+  if (val.length > 5) {
+    err.textContent = t('err_prefix_len')
+    err.style.display = 'block'
+    input.style.borderColor = '#ef4444'
+    return false
+  }
+  err.style.display = 'none'
+  input.style.borderColor = ''
+  return true
+}
+
+/* ── Settings ──────────────────────────────────────────────────── */
+function renderSettings() {
+  const c = cfg; const cards = c.analytics_cards || {}
+  const cardItems = [
+    ['top_skills',          t('top_skills_title'),     t('card_top_desc')],
+    ['transition_graph',    t('transition_graph'),      t('card_transition_desc')],
+    ['hourly_distribution', t('hourly_title'),          t('card_hourly_desc')],
+    ['weekday_distribution',t('weekday_title'),         t('card_weekday_desc')],
+    ['heatmap',             t('heatmap_title'),        t('card_heatmap_desc')],
+  ]
+  const tw = v => `<option value="${v}" ${(c.time_window||'all')===v?'selected':''}>${t('tw_'+v)}</option>`
+
+  document.getElementById('tab-settings').innerHTML = `
+
+    <!-- Display card -->
+    <div class="card">
+      <div class="card-title"><div class="card-icon">🎨</div>${t('s_language')}</div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_lang')}</div><div class="s-sub">${t('f_lang_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-lang-group">
+          ${[{code:'auto',label:'Auto'},...Object.entries(T).filter(([,l])=>l._meta).map(([code,l])=>({code,label:l._meta.label}))].map(({code,label}) =>
+            `<button class="mode-btn ${(c.language||'auto')===code?'active':''}" data-value="${code}" onclick="selectOption('cfg-lang-group','${code}');previewLang('${code}')">${label}</button>`
+          ).join('')}
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_theme')}</div><div class="s-sub">${t('f_theme_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-theme-group">
+          <button class="mode-btn ${(c.theme||'system')==='system'?'active':''}" data-value="system" onclick="selectOption('cfg-theme-group','system');document.documentElement.dataset.theme='system';autoSave(0)">${t('theme_sys')}</button>
+          <button class="mode-btn ${c.theme==='light'?'active':''}" data-value="light" onclick="selectOption('cfg-theme-group','light');document.documentElement.dataset.theme='light';autoSave(0)">${t('theme_light')}</button>
+          <button class="mode-btn ${c.theme==='dark'?'active':''}" data-value="dark" onclick="selectOption('cfg-theme-group','dark');document.documentElement.dataset.theme='dark';autoSave(0)">${t('theme_dark')}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shortcuts card -->
+    <div class="card">
+      <div class="card-title"><div class="card-icon">⚡</div>${t('s_general')}</div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_tw')}</div><div class="s-sub">${t('f_tw_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-tw-group">
+          ${['all','halfyear','month','week','today'].map(v=>`<button class="mode-btn ${(c.time_window||'all')===v?'active':''}" data-value="${v}" onclick="selectOption('cfg-tw-group','${v}');autoSave(0)">${t('tw_'+v)}</button>`).join('')}
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_prefix')}</div><div class="s-sub">${t('f_prefix_sub')} <code id="prefix-example"></code></div></div>
+        <input type="text" id="cfg-prefix" value="${c.prefix||'sh'}" oninput="updatePrefixExample(); if(validatePrefix(this)) autoSave(800); checkPrefixConflicts(this.value.trim())">
+      </div>
+      <div id="prefix-error" style="color:#ef4444;font-size:12px;margin:2px 0 6px;display:none"></div>
+      <div id="prefix-conflict" style="font-size:12px;margin:2px 0 6px;display:none"></div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('s_shortcut_support')}</div><div class="s-sub">${t('s_shortcut_support_sub')}</div></div>
+        <div class="mode-btn-group">
+          <button class="mode-btn ${(c.shortcut_mode||'both')!=='command'?'active':''}" id="cfg-mode-numeric" onclick="toggleSupportMode('numeric')">${tf('mode_numeric_label',{prefix:c.prefix||'sh'})}</button>
+          <button class="mode-btn ${(c.shortcut_mode||'both')!=='numeric'?'active':''}" id="cfg-mode-command" onclick="toggleSupportMode('command')">${tf('mode_command_label',{prefix:c.prefix||'sh'})}</button>
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('s_shortcut_active')}</div><div class="s-sub">${t('s_shortcut_active_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-active-mode-group"></div>
+      </div>
+      <div class="s-row" id="row-numeric-n">
+        <div><div class="s-lbl">${t('f_numeric_n')}</div><div class="s-sub" id="cfg-numeric-n-sub">${tf('f_numeric_n_sub_pfx',{prefix:c.prefix||'sh'})}</div></div>
+        <input type="number" id="cfg-numeric-n" value="${Math.min(9,Math.max(1,c.numeric_n||5))}" min="1" max="9" oninput="autoSave()">
+      </div>
+      <div class="s-row" id="row-topn">
+        <div><div class="s-lbl">${t('f_topn')}</div><div class="s-sub">${t('f_topn_sub')}</div></div>
+        <input type="number" id="cfg-topn" value="${Math.min(50,Math.max(3,c.top_n||5))}" min="3" max="50" oninput="autoSave()">
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_top_skills_n')}</div><div class="s-sub">${t('f_top_skills_n_sub')}</div></div>
+        <input type="number" id="cfg-top-skills-n" value="${Math.min(50,Math.max(3,c.top_skills_n||5))}" min="3" max="50" oninput="autoSave()">
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_rerank_interval')}</div><div class="s-sub">${t('f_rerank_interval_sub')}</div></div>
+        <input type="number" id="cfg-rerank-interval" value="${Math.min(3600,Math.max(10,c.rerank_interval_secs??60))}" min="10" max="3600" oninput="autoSave()">
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_seq')}</div><div class="s-sub">${t('f_seq_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-seq-group">
+          <button class="mode-btn ${c.enable_sequence_prediction!==false?'active':''}" data-value="on" onclick="selectOption('cfg-seq-group','on');autoSave(0)">${t('opt_on')}</button>
+          <button class="mode-btn ${c.enable_sequence_prediction===false?'active':''}" data-value="off" onclick="selectOption('cfg-seq-group','off');autoSave(0)">${t('opt_off')}</button>
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_prediction_n')}</div><div class="s-sub">${t('f_prediction_n_sub')}</div></div>
+        <input type="number" id="cfg-prediction-n" value="${Math.min(5,Math.max(1,c.prediction_n??5))}" min="1" max="5" oninput="autoSave()">
+      </div>
+    </div>
+
+    <!-- Analytics Cards card -->
+    <div class="card">
+      <div class="card-title"><div class="card-icon">📊</div>${t('s_cards')}</div>
+      ${cardItems.map(([k, label, desc]) => `
+        <div class="s-row">
+          <div><div class="s-lbl">${label}</div><div class="s-sub">${desc}</div></div>
+          <div class="mode-btn-group" data-card="${k}">
+            <button class="mode-btn ${cards[k]!==false?'active':''}" data-value="on" onclick="selectOption(this.parentElement,'on');toggleCard('${k}',true)">${t('opt_on')}</button>
+            <button class="mode-btn ${cards[k]===false?'active':''}" data-value="off" onclick="selectOption(this.parentElement,'off');toggleCard('${k}',false)">${t('opt_off')}</button>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Log Management card -->
+    <div class="card">
+      <div class="card-title"><div class="card-icon">🗂</div>${t('s_logs')}</div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_log_retention')}</div><div class="s-sub">${t('f_log_retention_sub')}</div></div>
+        <input type="number" id="cfg-retention" value="${Math.min(3650,Math.max(0,c.log_retention_days ?? 30))}" min="0" max="3650" oninput="autoSave()">
+      </div>
+      <div class="s-row" style="border-bottom:none">
+        <div><div class="s-lbl">${t('f_cleanup')}</div><div class="s-sub">${t('f_cleanup_sub')}</div></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+          <input type="number" id="cfg-cleanup-days" value="30" min="0" max="3650" style="width:5em">
+          <button class="reset-btn" id="cleanup-btn" onclick="cleanupLog()" style="min-width:4em">${t('cleanup_btn')}</button>
+          <span id="cleanup-status" style="font-size:12px;color:#16a34a"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Version & Upgrade card -->
+    <div class="card">
+      <div class="card-title"><div class="card-icon">🚀</div>${t('s_version')}</div>
+      <div class="s-row" style="border-bottom:none">
+        <div id="version-info" style="font-size:13px;color:var(--fg2)">${_versionHtml()}</div>
+        <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+          <button class="reset-btn" id="check-update-btn" onclick="checkUpdate()">${t('check_update')}</button>
+          <button class="reset-btn" id="do-upgrade-btn" onclick="doUpgrade()" style="display:none;color:var(--brand);border-color:var(--brand)">${t('upgrade_btn')}</button>
+          <span id="upgrade-result" style="font-size:12px"></span>
+        </div>
+      </div>
+      <div id="upgrade-cmd-wrap" style="display:none;margin-top:8px">
+        <div class="s-sub" style="margin-bottom:6px">${t('upgrade_cmd_label')}</div>
+        <code id="upgrade-cmd-text" style="display:block;font-family:monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;word-break:break-all;color:var(--brand)"></code>
+      </div>
+      <div id="update-notes-wrap" style="display:none;margin-top:12px">
+        <div class="s-sub" style="margin-bottom:6px;font-weight:500" id="update-notes-label"></div>
+        <pre id="update-notes-text" style="font-size:12px;color:var(--fg2);line-height:1.7;white-space:pre-wrap;margin:0;font-family:inherit;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px 12px"></pre>
+      </div>
+    </div>
+
+    <!-- Action row -->
+    <div class="save-row">
+      <span class="save-ok" id="save-ok">${t('saved')}</span>
+      <span style="flex:1"></span>
+      <button class="reset-btn" onclick="resetSettings()">${t('reset')}</button>
+      <button class="close-srv-btn" onclick="closeServer()">${t('close_srv')}</button>
+    </div>`
+
+  updatePrefixExample()
+  updateModeOptions(cfg.active_mode || cfg.shortcut_mode || 'both')
+  updateShortcutRows()
+}
+
+function selectOption(groupOrId, val) {
+  const grp = typeof groupOrId === 'string' ? document.getElementById(groupOrId) : groupOrId
+  grp?.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.value === val))
+}
+
+function toggleSupportMode(mode) {
+  const btn = document.getElementById(`cfg-mode-${mode}`)
+  if (!btn) return
+  const isActive = btn.classList.contains('active')
+  const otherMode = mode === 'numeric' ? 'command' : 'numeric'
+  const otherBtn = document.getElementById(`cfg-mode-${otherMode}`)
+  if (isActive && !otherBtn?.classList.contains('active')) return
+  btn.classList.toggle('active', !isActive)
+  updateModeOptions()
+  updateShortcutRows()
+  updatePrefixExample()
+  autoSave(0)
+}
+
+function selectActiveMode(val) {
+  document.querySelectorAll('#cfg-active-mode-group .mode-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.value === val)
+  )
+  updatePrefixExample()
+  autoSave(0)
+}
+
+function updateModeOptions(initialVal) {
+  const numChecked = document.getElementById('cfg-mode-numeric')?.classList.contains('active')
+  const cmdChecked = document.getElementById('cfg-mode-command')?.classList.contains('active')
+  const grp = document.getElementById('cfg-active-mode-group')
+  if (!grp) return
+  const prev = initialVal !== undefined ? initialVal : (document.querySelector('#cfg-active-mode-group .mode-btn.active')?.dataset.value)
+  const opts = []
+  if (numChecked && cmdChecked) opts.push(['both', t('s_mode_both')])
+  if (numChecked) opts.push(['numeric', t('s_mode_numeric')])
+  if (cmdChecked) opts.push(['command', t('s_mode_command')])
+  const activeVal = opts.find(([v]) => v === prev)?.[0] ?? opts[0]?.[0]
+  grp.innerHTML = opts.map(([v, l]) =>
+    `<button class="mode-btn ${v === activeVal ? 'active' : ''}" data-value="${v}" onclick="selectActiveMode('${v}')">${l}</button>`
+  ).join('')
+  updateShortcutRows()
+  updatePrefixExample()
+}
+
+function updateShortcutRows() {
+  const numChecked = document.getElementById('cfg-mode-numeric')?.classList.contains('active')
+  const cmdChecked = document.getElementById('cfg-mode-command')?.classList.contains('active')
+  const topnRow = document.getElementById('row-topn')
+  const numericRow = document.getElementById('row-numeric-n')
+  if (topnRow) topnRow.style.display = cmdChecked ? '' : 'none'
+  if (numericRow) numericRow.style.display = numChecked ? '' : 'none'
+}
+
+let _prefixCheckTimer = null
+let _prefixConflictCache = { prefix: null, html: '', visible: false }
+
+async function checkPrefixConflicts(prefix, immediate = false) {
+  clearTimeout(_prefixCheckTimer)
+  const el = document.getElementById('prefix-conflict')
+  if (!el) return
+  if (!prefix || !/^[a-zA-Z0-9_-]+$/.test(prefix) || prefix.length > 5) {
+    _prefixConflictCache = { prefix, html: '', visible: false }
+    el.style.display = 'none'; return
+  }
+  const _doCheck = async () => {
+    const r = await fetch(`/api/check-prefix?prefix=${encodeURIComponent(prefix)}`).then(r => r.json()).catch(() => null)
+    if (!r) return
+    const hasCon = r.conflicts && r.conflicts.length > 0
+    // Only show the hint when there are actual conflicts; hide immediately if prefix is clean
+    if (!hasCon) {
+      _prefixConflictCache = { prefix, html: '', visible: false }
+      const el2 = document.getElementById('prefix-conflict')
+      if (el2) el2.style.display = 'none'
+      return
+    }
+    const suggs = r.suggestions || []
+    let html = ''
+    const byType = { builtin: [], skill: [], plugin: [], plugin_skill: [] }
+    ;(r.conflict_details || r.conflicts.map(n => ({name: n, type: 'skill'}))).forEach(c => {
+      const bucket = byType[c.type] || byType.skill
+      bucket.push(c.name)
+    })
+    const parts = []
+    if (byType.builtin.length) parts.push(`${t('prefix_conflict_builtin')} <b>${byType.builtin.join(', ')}</b>`)
+    if (byType.skill.length) parts.push(`${t('prefix_conflict_skill')} <b>${byType.skill.join(', ')}</b>`)
+    if (byType.plugin.length) parts.push(`${t('prefix_conflict_plugin')} <b>${byType.plugin.join(', ')}</b>`)
+    if (byType.plugin_skill.length) parts.push(`${t('prefix_conflict_plugin')} <b>${byType.plugin_skill.join(', ')}</b>`)
+    html += `<div style="color:#f59e0b;margin-bottom:4px">⚠ ${parts.join('；')}</div>`
+    if (suggs.length) {
+      const chips = suggs.map(s =>
+        `<span class="prefix-chip" onclick="applyPrefix('${s.prefix}')" title="${t('prefix_chip_hint')}">${s.prefix}</span>`
+      ).join('')
+      html += `<div class="prefix-suggestions"><span class="prefix-suggest-label">${t('prefix_suggest_label')}</span>${chips}</div>`
+    }
+    _prefixConflictCache = { prefix, html, visible: true }
+    const el2 = document.getElementById('prefix-conflict')
+    if (el2) { el2.innerHTML = html; el2.style.display = '' }
+  }
+  if (immediate) {
+    _doCheck()
+  } else {
+    _prefixCheckTimer = setTimeout(_doCheck, 400)
+  }
+}
+
+function _restorePrefixConflict() {
+  if (!_prefixConflictCache.visible) return
+  const el = document.getElementById('prefix-conflict')
+  const inp = document.getElementById('cfg-prefix')
+  if (!el || !inp) return
+  if (inp.value.trim() === _prefixConflictCache.prefix) {
+    el.innerHTML = _prefixConflictCache.html
+    el.style.display = ''
+  }
+}
+
+function applyPrefix(p) {
+  const inp = document.getElementById('cfg-prefix')
+  if (!inp) return
+  inp.value = p
+  updatePrefixExample()
+  validatePrefix(inp)
+  checkPrefixConflicts(p)
+  autoSave(800)
+}
+
+function updatePrefixExample() {
+  const raw = (document.getElementById('cfg-prefix')?.value || '').trim()
+  const mode = document.querySelector('#cfg-active-mode-group .mode-btn.active')?.dataset.value || 'both'
+  const el = document.getElementById('prefix-example')
+  if (!el) return
+  // Only update example when input is valid
+  if (!raw || !/^[a-zA-Z0-9_-]+$/.test(raw) || raw.length > 5) return
+  const prefix = raw
+  const ph = t('ph_skill')
+  if (mode === 'both')         el.textContent = `/${prefix}-${ph}  ·  /${prefix}1-${ph}`
+  else if (mode === 'command') el.textContent = `/${prefix}-${ph}`
+  else                         el.textContent = `/${prefix}1-${ph}`
+  const numBtn = document.getElementById('cfg-mode-numeric')
+  const cmdBtn = document.getElementById('cfg-mode-command')
+  if (numBtn) numBtn.textContent = tf('mode_numeric_label', {prefix})
+  if (cmdBtn) cmdBtn.textContent = tf('mode_command_label', {prefix})
+  const numNSub = document.getElementById('cfg-numeric-n-sub')
+  if (numNSub) numNSub.textContent = tf('f_numeric_n_sub_pfx', {prefix})
+}
+
+function previewLang(val) {
+  cfg = { ...cfg, language: val }
+  lang = detectLang()
+  renderAll()
+  autoSave(0)
+}
+
+async function cleanupLog() {
+  const days = Math.min(3650, Math.max(0, parseInt(document.getElementById('cfg-cleanup-days')?.value) ?? 30))
+  const confirmMsg = days === 0 ? t('cleanup_confirm_all') : t('cleanup_confirm_trim').replace('%d', days)
+  if (!confirm(confirmMsg)) return
+  const btn = document.getElementById('cleanup-btn')
+  if (btn) btn.disabled = true
+  const r = days === 0
+    ? await fetch('/api/logs/clear', { method: 'POST', body: '{}' }).then(r => r.json())
+    : await fetch('/api/logs/trim', { method: 'POST', body: JSON.stringify({ days }) }).then(r => r.json())
+  if (btn) btn.disabled = false
+  const el = document.getElementById('cleanup-status')
+  if (el) { el.textContent = `${t('cleanup_ok')} (${r.removed ?? 0})`; setTimeout(() => { el.textContent = '' }, 3000) }
+  skillsState.data = null
+  refreshStats()
+  refreshA(cfg.time_window || 'all')
+}
+
+function _shouldShowBanner() {
+  if (!_versionResult || _versionResult.update_level !== 'major') return false
+  const dismissed = localStorage.getItem('sh_banner_dismissed')
+  return dismissed !== _versionResult.latest
+}
+
+function _showBanner(r) {
+  if (!_shouldShowBanner()) return
+  const banner = document.getElementById('update-banner')
+  const titleEl = document.getElementById('banner-title')
+  const notesEl = document.getElementById('banner-notes')
+  const upgradeBtn = document.getElementById('banner-upgrade-btn')
+  if (!banner) return
+  if (titleEl) titleEl.textContent = `${t('update_major')} — v${r.current} → v${r.latest}`
+  if (notesEl) notesEl.textContent = r.notes || ''
+  if (upgradeBtn) upgradeBtn.textContent = t('upgrade_btn')
+  banner.style.display = ''
+}
+
+function dismissBanner() {
+  const banner = document.getElementById('update-banner')
+  if (banner) banner.style.display = 'none'
+  if (_versionResult?.latest) localStorage.setItem('sh_banner_dismissed', _versionResult.latest)
+}
+
+async function _silentVersionCheck() {
+  const r = await fetch('/api/version').then(r => r.json()).catch(() => null)
+  if (!r) return
+  _versionResult = r
+  const info = document.getElementById('version-info')
+  if (info && !info.textContent) info.innerHTML = _versionHtml()
+  _showBanner(r)
+}
+
+async function doUpgrade() {
+  const btn = document.getElementById('do-upgrade-btn')
+  const bannerBtn = document.getElementById('banner-upgrade-btn')
+  const result = document.getElementById('upgrade-result')
+  const bannerResult = document.getElementById('banner-upgrade-result')
+  ;[btn, bannerBtn].forEach(b => { if (b) { b.disabled = true; b.textContent = t('upgrading') } })
+  if (result) result.textContent = ''
+  if (bannerResult) bannerResult.textContent = ''
+  const r = await fetch('/api/upgrade', { method: 'POST', body: '{}' }).then(r => r.json()).catch(() => null)
+  ;[btn, bannerBtn].forEach(b => { if (b) { b.disabled = false; b.textContent = t('upgrade_btn') } })
+  if (!r) {
+    if (result) { result.textContent = t('upgrade_fail'); result.style.color = '#ef4444' }
+    if (bannerResult) { bannerResult.textContent = t('upgrade_fail'); bannerResult.style.color = '#ef4444' }
+    return
+  }
+  if (r.ok) {
+    if (result) { result.textContent = t('upgrade_ok'); result.style.color = '#16a34a' }
+    dismissBanner()
+    setTimeout(checkUpdate, 500)
+  } else {
+    const msg = `${t('upgrade_fail')}: ${r.error || r.stderr || ''}`
+    if (result) { result.textContent = msg; result.style.color = '#ef4444' }
+    if (bannerResult) { bannerResult.textContent = msg; bannerResult.style.color = '#ef4444' }
+  }
+}
+
+async function checkUpdate() {
+  const btn = document.getElementById('check-update-btn')
+  const upgradeBtn = document.getElementById('do-upgrade-btn')
+  const info = document.getElementById('version-info')
+  const cmdWrap = document.getElementById('upgrade-cmd-wrap')
+  const cmdText = document.getElementById('upgrade-cmd-text')
+  const notesWrap = document.getElementById('update-notes-wrap')
+  const notesLabel = document.getElementById('update-notes-label')
+  const notesText = document.getElementById('update-notes-text')
+  if (btn) btn.disabled = true
+  if (info) info.textContent = t('checking')
+  const r = await fetch('/api/version').then(r => r.json()).catch(() => null)
+  if (btn) btn.disabled = false
+  if (!r) { if (info) info.textContent = '—'; return }
+  _versionResult = r
+  const hasUpdate = !!r.update_level
+  if (hasUpdate) {
+    if (cmdWrap) cmdWrap.style.display = 'block'
+    if (cmdText) cmdText.textContent = r.upgrade_cmd || ''
+    if (upgradeBtn) upgradeBtn.style.display = ''
+    if (r.notes) {
+      if (notesLabel) notesLabel.textContent = t('update_notes_label')
+      if (notesText) notesText.textContent = r.notes
+      if (notesWrap) notesWrap.style.display = 'block'
+    } else {
+      if (notesWrap) notesWrap.style.display = 'none'
+    }
+  } else {
+    if (cmdWrap) cmdWrap.style.display = 'none'
+    if (upgradeBtn) upgradeBtn.style.display = 'none'
+    if (notesWrap) notesWrap.style.display = 'none'
+  }
+  if (info) info.innerHTML = _versionHtml()
+  _showBanner(r)
+}
+
+async function closeServer() {
+  if (!confirm(t('close_srv_confirm'))) return
+  await fetch('/api/shutdown', { method: 'POST', body: '{}' }).catch(() => {})
+  document.body.innerHTML = `<div style="display:flex;height:100vh;align-items:center;justify-content:center;font-family:system-ui;color:#6b7280;font-size:14px">Server closed.</div>`
+  setTimeout(() => window.close(), 800)
+}
+
+async function resetSettings() {
+  if (!confirm(t('reset_confirm'))) return
+  const defaults = await fetch('/api/config/reset', { method: 'POST', body: '{}' }).then(r => r.json())
+  cfg = defaults
+  lang = detectLang()
+  document.documentElement.dataset.theme = cfg.theme || 'system'
+  renderAll()
+  refreshStats()
+  refreshA(cfg.time_window || 'all')
+}
+
+async function saveSettings() {
+  const prefixInput = document.getElementById('cfg-prefix')
+  if (!validatePrefix(prefixInput)) return
+  const cards = {}
+  document.querySelectorAll('[data-card]').forEach(el => { cards[el.dataset.card] = el.querySelector('.mode-btn.active')?.dataset.value !== 'off' })
+  const patch = {
+    prefix:   prefixInput.value.trim() || 'sh',
+    shortcut_mode: (() => { const n = document.getElementById('cfg-mode-numeric')?.classList.contains('active'); const c = document.getElementById('cfg-mode-command')?.classList.contains('active'); return (n && c) ? 'both' : n ? 'numeric' : c ? 'command' : 'both' })(),
+    active_mode: document.querySelector('#cfg-active-mode-group .mode-btn.active')?.dataset.value || 'both',
+    top_n:    Math.min(50, Math.max(3, parseInt(document.getElementById('cfg-topn').value) || 5)),
+    numeric_n: Math.min(9, Math.max(1, parseInt(document.getElementById('cfg-numeric-n')?.value) || 5)),
+    time_window: document.querySelector('#cfg-tw-group .mode-btn.active')?.dataset.value || 'all',
+    enable_sequence_prediction: document.querySelector('#cfg-seq-group .mode-btn.active')?.dataset.value !== 'off',
+    prediction_n: Math.min(5, Math.max(1, parseInt(document.getElementById('cfg-prediction-n')?.value) || 5)),
+    theme:    document.querySelector('#cfg-theme-group .mode-btn.active')?.dataset.value || 'system',
+    language: document.querySelector('#cfg-lang-group .mode-btn.active')?.dataset.value || 'auto',
+    analytics_cards: cards,
+    top_skills_n: Math.min(50, Math.max(3, parseInt(document.getElementById('cfg-top-skills-n')?.value ?? '5') || 5)),
+    rerank_interval_secs: Math.min(3600, Math.max(10, parseInt(document.getElementById('cfg-rerank-interval')?.value) || 60)),
+    log_retention_days: Math.min(3650, Math.max(0, parseInt(document.getElementById('cfg-retention')?.value ?? '30') || 0)),
+  }
+  await fetch('/api/config', { method: 'POST', body: JSON.stringify(patch) })
+  cfg = { ...cfg, ...patch }
+  lang = detectLang()
+  document.documentElement.dataset.theme = cfg.theme
+  renderAll()
+  _restorePrefixConflict()
+  refreshStats()
+  refreshA(cfg.time_window || 'all')
+  const ok = document.getElementById('save-ok')
+  if (ok) { ok.classList.add('show'); setTimeout(() => ok.classList.remove('show'), 2200) }
+}
+
+init()
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "skill-habit",
+  "version": "0.0.1",
+  "description": "skill-habit management skills — quick info, web UI, version, rebuild",
+  "author": {
+    "name": "kiss4u"
+  },
+  "skills": [
+    "./skills/quick",
+    "./skills/server",
+    "./skills/version",
+    "./skills/rebuild"
+  ]
+}
