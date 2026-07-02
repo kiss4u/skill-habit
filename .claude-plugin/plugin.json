@@ -10,6 +10,11 @@
     "./skills/quick",
     "./skills/server",
     "./skills/version",
-    "./skills/rebuild"
+    "./skills/rebuild",
+    "./skills/uninstall"
+  ],
+  "hooks": [
+    "./.claude-plugin/hooks/user-prompt-submit.json",
+    "./.claude-plugin/hooks/session-start.json"
   ]
 }

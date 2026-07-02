@@ -23,7 +23,7 @@
   <a href="#-quick-start"><img src="https://img.shields.io/badge/Quick%20Start-→-blueviolet?style=flat-square" alt="Quick Start"></a>
   <a href="../LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-✓-7c3aed?style=flat-square" alt="Claude Code">
-  <img src="https://img.shields.io/badge/Python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/Python-3.7%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.7+">
   <img src="https://img.shields.io/badge/version-0.0.1-brightgreen?style=flat-square" alt="version">
   <a href="https://github.com/kiss4u/skill-habit/stargazers"><img src="https://img.shields.io/github/stars/kiss4u/skill-habit?style=flat-square&color=orange" alt="GitHub Stars"></a>
 </p>
@@ -32,14 +32,19 @@
 
 ## Table of Contents
 
-- [The problem](#the-problem)
-- [The solution](#the-solution)
+- [🤔 The problem](#-the-problem)
+- [💡 The solution](#-the-solution)
 - [✨ Features](#-features)
-- [🔒 Privacy](#-privacy)
+  - [🔑 Shortcut Prefix](#-shortcut-prefix)
+  - [🔮 Association Prediction (Smart Ordering)](#-association-prediction-smart-ordering)
+  - [📐 Numeric Shortcut Ordering](#-numeric-shortcut-ordering)
+  - [🔒 Privacy](#-privacy)
 - [🚀 Quick Start](#-quick-start)
   - [Installation](#installation)
   - [Upgrading](#upgrading)
+  - [Uninstall](#uninstall)
   - [Configuration](#configuration)
+- [Built-in Skills](#built-in-skills)
 - [🖥 Management Platform](#-management-platform)
   - [🗂 Skills Management](#-skills-management)
   - [📊 Analytics](#-analytics)
@@ -50,11 +55,11 @@
 
 ---
 
-## The problem
+## 🤔 The problem
 
 You installed a bunch of skills. Now every time you type `/`, you scroll through the whole list before you can use any of them.
 
-## The solution
+## 💡 The solution
 
 skill-habit tracks every skill you invoke (metadata only — never prompt content).
 
@@ -83,9 +88,54 @@ The list reflects your most-used skills, not a meaningless default order.
 | 🔒  | **Privacy-first**          | Logs skill name, time, and session ID only — never your prompt content                                                                                                                      | All          |
 | 🔧  | **On-demand server**       | Management UI starts when you need it, exits when you close the tab                                                                                                                         | All          |
 
----
 
-## 🔒 Privacy
+### 🔑 Shortcut Prefix
+
+The **shortcut prefix** is the namespace for all shortcuts skill-habit generates — default is `sh`. Each session, shortcuts are built in one or both of these modes (configurable):
+
+| Mode        | Format                   | Example (prefix `sh`)     | Notes                                                                                                       |
+| ----------- | ------------------------ | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Numeric** | `/<prefix><N×rank>`      | `/sh1`, `/sh22`, `/sh333` | Frequency-sorted; `/sh1` always maps to the current top skill; association prediction updates every session |
+| **Command** | `/<prefix>-<skill-name>` | `/sh-git-smart`           | Call skills by name directly; menu order is fixed alphabetically by Claude Code, unaffected by frequency    |
+
+Go to **Settings → General → Shortcut prefix**, enter a new value, and save — shortcuts rebuild immediately. The UI detects conflicts in real time and shows conflict-free alternatives below the input for you to click and apply.
+
+**Format rules:** letters, digits, `-`, `_` only; max 5 characters.
+
+### 🔮 Association Prediction (Smart Ordering)
+
+When `enable_sequence_prediction` is on, at each session start the system:
+
+1. Reads the last skill you used
+2. Queries the historical transition matrix to predict the 3 most likely next skills
+3. Boosts those 3 skills to the top of the shortcut list
+
+Effectiveness depends on shortcut mode:
+
+| Mode                       | Effect                                                                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Numeric** (`/sh1 /sh2…`) | Prediction directly changes which skill occupies `sh1`/`sh2`. Typing `/sh1` always runs the recommended skill. **Fully effective.** |
+| **Command** (`/sh-<name>`) | Menu order is fixed alphabetically by Claude Code — prediction **has no effect on menu ordering**.                                  |
+
+> Accuracy improves as data accumulates. Results are meaningful after 20+ sessions.
+
+### 📐 Numeric Shortcut Ordering
+
+Claude Code's autocomplete ranks suggestions primarily by **total name length** — shorter names score higher and appear first. skill-habit generates numeric shortcuts with **strictly increasing name lengths** by repeating each rank digit N times:
+
+| Rank          | Shortcut  | Length  |
+| ------------- | --------- | ------- |
+| 1 (most used) | `sh1`     | 2 chars |
+| 2             | `sh22`    | 3 chars |
+| 3             | `sh333`   | 4 chars |
+| 4             | `sh4444`  | 5 chars |
+| 5             | `sh55555` | 6 chars |
+
+This guarantees the dropdown shows shortcuts in frequency order. When your usage patterns shift, shortcut assignments update automatically at the next session start.
+
+To invoke: type `/sh1` directly, or `/sh2` (fuzzy-matches `sh22`) and press Enter.
+
+### 🔒 Privacy
 
 skill-habit **never logs** prompt content, file paths, or project names.
 
@@ -112,7 +162,7 @@ Log entries older than `log_retention_days` (default: 30) are automatically trim
 
 ## 🚀 Quick Start
 
-> **Requirements:** macOS or Linux · Python 3.9+ · git
+> **Requirements:** macOS or Linux · Python 3.7+ · git
 >
 > **Windows:** Not yet supported natively. Use [WSL](https://learn.microsoft.com/windows/wsl/) as a workaround.
 
@@ -121,10 +171,16 @@ Log entries older than `log_retention_days` (default: 30) are automatically trim
 **Option A — Claude Code plugin install (recommended)**
 
 ```bash
-claude plugins install github:kiss4u/skill-habit
+# Step 1: Register marketplace
+claude plugins marketplace add kiss4u/skill-habit
+
+# Step 2: Install plugin
+claude plugins install skill-habit@skill-habit
 ```
 
 Restart Claude Code after install — tracking begins immediately.
+
+> Having trouble with Option A? Option B works exactly the same — use it instead.
 
 **Option B — one-line install**
 
@@ -132,9 +188,11 @@ Restart Claude Code after install — tracking begins immediately.
 curl -sSL https://raw.githubusercontent.com/kiss4u/skill-habit/main/scripts/bootstrap.sh | bash
 ```
 
+> Installs to `~/.claude/skills/skill-habit` by default (directory is created if it doesn't exist). To use a custom path: `SKILL_HABIT_INSTALL_DIR=/your/path curl -sSL ... | bash`
+
 **Option C — pipx / pip**
 
-> Note: this method does not install built-in skills (`/skill-habit:quick`, `/skill-habit:server`, etc.). Option A or B is recommended.
+> Note: `skill-habit install` automatically syncs built-in skills when it runs — fully equivalent to Option A / B.
 
 pipx (recommended — keeps it isolated):
 ```bash
@@ -154,27 +212,6 @@ skill-habit install
 
 Cursor, Codex CLI, Gemini CLI, and more are planned. See the Contributing section to add an adapter.
 
-**Opening the management UI**
-
-After installing, open the dashboard with any of these:
-
-In Claude Code:
-```bash
-/skill-habit:server
-```
-
-pip / pipx install:
-```bash
-skill-habit server
-```
-
-bootstrap / clone install:
-```bash
-python3 ~/.local/share/skill-habit/ui/server.py
-```
-
-The browser opens automatically. The server exits after 5 minutes of inactivity.
-
 ---
 
 ### Upgrading
@@ -184,7 +221,7 @@ Use the same command as install — each method handles upgrades automatically:
 **Option A — Claude Code plugin**
 
 ```bash
-claude plugins update skill-habit
+claude plugins update skill-habit@skill-habit
 ```
 
 **Option B — one-line**
@@ -213,31 +250,56 @@ You can also check for updates and upgrade with one click directly from the **Se
 
 ---
 
+### Uninstall
+
+**Option A — Claude Code Plugin**
+
+```bash
+/skill-habit:uninstall
+```
+
+**Option B — One-line command**
+
+```bash
+/skill-habit:uninstall
+```
+
+> You'll be asked whether to also delete usage history and config data (`~/.skill-habit`) — choose as needed.
+
+**Option C — pipx / pip**
+
+pipx:
+```bash
+skill-habit uninstall
+pipx uninstall skill-habit
+```
+
+pip:
+```bash
+skill-habit uninstall
+pip uninstall skill-habit
+```
+
+---
+
 ### Configuration
 
-**Shortcut Prefix**
+**Opening the management UI**
 
-The **shortcut prefix** is the namespace for all shortcuts skill-habit generates — default is `sh`. Each session, shortcuts are built in one or both of these modes (configurable):
+After installing, open the dashboard using either of these:
 
-| Mode        | Format                   | Example (prefix `sh`)     | Notes                                                                                                       |
-| ----------- | ------------------------ | ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| **Numeric** | `/<prefix><N×rank>`      | `/sh1`, `/sh22`, `/sh333` | Frequency-sorted; `/sh1` always maps to the current top skill; association prediction updates every session |
-| **Command** | `/<prefix>-<skill-name>` | `/sh-git-smart`           | Call skills by name directly; menu order is fixed alphabetically by Claude Code, unaffected by frequency    |
+In Claude Code (Option A / B):
+```bash
+/skill-habit:server
+```
 
-Go to **Settings → General → Shortcut prefix**, enter a new value, and save — shortcuts rebuild immediately. The UI detects conflicts in real time and shows conflict-free alternatives below the input for you to click and apply.
+Command line (Option C — pipx / pip):
+```bash
+skill-habit server
+```
 
-**Format rules:** letters, digits, `-`, `_` only; max 5 characters.
 
-**Built-in Skills**
-
-The following management skills are built into skill-habit as a plugin and are always available regardless of your prefix:
-
-| Skill                  | Description                                       | When to use                                                                                                           |
-| ---------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `/skill-habit:quick`   | Show current prefix and numeric shortcut mappings | Forgotten your prefix or which number maps to which skill? Run this to see, e.g. `Prefix: sh`, `/sh1 → git-smart`     |
-| `/skill-habit:server`  | Open the web management UI in your browser        | Change settings, view analytics, manage skills; browser opens automatically, server exits after 5 minutes idle        |
-| `/skill-habit:rebuild` | Rebuild shortcut skills immediately               | Use after manually editing `~/.skill-habit/config.json`; changes saved via the Web UI trigger a rebuild automatically |
-| `/skill-habit:version` | Show the installed version                        | Confirm version when troubleshooting or filing a bug report                                                           |
+The browser opens automatically. The server exits after 5 minutes of inactivity.
 
 **config.json**
 
@@ -267,38 +329,19 @@ The following management skills are built into skill-habit as a plugin and are a
 }
 ```
 
-**🔮 Association Prediction (Smart Ordering)**
+---
 
-When `enable_sequence_prediction` is on, at each session start the system:
+## Built-in Skills
 
-1. Reads the last skill you used
-2. Queries the historical transition matrix to predict the 3 most likely next skills
-3. Boosts those 3 skills to the top of the shortcut list
+The following management skills are built into skill-habit as a plugin and are always available regardless of your prefix:
 
-Effectiveness depends on shortcut mode:
-
-| Mode                       | Effect                                                                                                                              |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Numeric** (`/sh1 /sh2…`) | Prediction directly changes which skill occupies `sh1`/`sh2`. Typing `/sh1` always runs the recommended skill. **Fully effective.** |
-| **Command** (`/sh-<name>`) | Menu order is fixed alphabetically by Claude Code — prediction **has no effect on menu ordering**.                                  |
-
-> Accuracy improves as data accumulates. Results are meaningful after 20+ sessions.
-
-**📐 Numeric Shortcut Ordering**
-
-Claude Code's autocomplete ranks suggestions primarily by **total name length** — shorter names score higher and appear first. skill-habit generates numeric shortcuts with **strictly increasing name lengths** by repeating each rank digit N times:
-
-| Rank          | Shortcut  | Length  |
-| ------------- | --------- | ------- |
-| 1 (most used) | `sh1`     | 2 chars |
-| 2             | `sh22`    | 3 chars |
-| 3             | `sh333`   | 4 chars |
-| 4             | `sh4444`  | 5 chars |
-| 5             | `sh55555` | 6 chars |
-
-This guarantees the dropdown shows shortcuts in frequency order. When your usage patterns shift, shortcut assignments update automatically at the next session start.
-
-To invoke: type `/sh1` directly, or `/sh2` (fuzzy-matches `sh22`) and press Enter.
+| Skill                  | Description                                       | When to use                                                                                                           |
+| ---------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `/skill-habit:quick`   | Show current prefix and numeric shortcut mappings | Forgotten your prefix or which number maps to which skill? Run this to see, e.g. `Prefix: sh`, `/sh1 → git-smart`     |
+| `/skill-habit:server`  | Open the web management UI in your browser        | Change settings, view analytics, manage skills; browser opens automatically, server exits after 5 minutes idle. Running it again restarts the server (no duplicate windows) on the same fixed port (default 5027); falls back to a random port if 5027 is taken        |
+| `/skill-habit:rebuild`    | Rebuild shortcut skills immediately               | Use after manually editing `~/.skill-habit/config.json`; changes saved via the Web UI trigger a rebuild automatically |
+| `/skill-habit:version`    | Show the installed version                        | Confirm version when troubleshooting or filing a bug report                                                           |
+| `/skill-habit:uninstall`  | Uninstall skill-habit | Auto-detects install method, cleans up hooks, shortcut skills, and plugin data; prompts whether to also delete usage history and config |
 
 ---
 
@@ -316,7 +359,7 @@ Open the **Skills** tab to:
 - **Blacklist skills** — click **Block** on any row to exclude a skill from frequency ranking and shortcuts; manage the blacklist (view, paginate, unblock) in the collapsible Blacklist section at the bottom of the tab
 - **Usage history** — see how many times you've used each skill and when you last used it
 
-> The Skills tab only shows skills you've used at least once. Skills are sourced from `~/.claude/skills/` and all installed plugins.
+> The Skills tab only shows skills you've used at least once. Skills are sourced from `~/.claude/skills/`, all installed plugins, and custom commands under `~/.claude/commands/` (displayed grouped by namespace in the **Commands** section at the bottom of the page).
 
 ### 📊 Analytics
 
@@ -350,6 +393,7 @@ The **Settings** tab covers three cards, changes take effect immediately:
 | Top skills chart rows  | Number of skills shown in the Analytics top-skills bar chart                                                            |
 | Rebuild interval       | Minutes of inactivity before the shortcut list auto-rebuilds                                                            |
 | Sequence prediction    | Predicts the next likely skill from usage history and boosts it upward                                                  |
+| Exclude self from stats | When on, invocations of `skill-habit:*` commands are excluded from all statistics (on by default)                      |
 | Prediction depth       | How many skills sequence prediction may promote (1–5)                                                                   |
 | Theme                  | Light / Dark / System                                                                                                   |
 | Language               | UI language: Auto / 中文 / English / Deutsch / Français / Русский / 한국어 / 日本語                                     |

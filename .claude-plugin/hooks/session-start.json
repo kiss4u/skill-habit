@@ -1,0 +1,16 @@
+{
+  "description": "skill-habit SessionStart hook — rebuilds shortcut skills and pre-computes analytics cache",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/adapters/claude_code/hooks/session-start.sh\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

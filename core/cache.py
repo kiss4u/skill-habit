@@ -25,28 +25,22 @@ def build(config: dict[str, Any]) -> dict[str, Any]:
     top_skills_n = config.get("top_skills_n", 10)
     cards = config.get("analytics_cards", {})
     generated = generated_set()
-
-    # Fetch extra beyond the target to ensure enough real skills remain after
-    # filtering out generated shortcuts (some real skills share names with old shortcuts)
-    fetch_n = max(top_n, top_skills_n) + len(generated) + 10
-    report = analyzer.full_report(time_window, top_n=fetch_n)
-
     bl: set[str] = set(config.get("blacklist", []))
-    # Filter top_skills to exclude generated shortcuts, blacklist, and skill-habit meta-skills
-    filtered_top_skills = [
-        item for item in report["top_skills"]
-        if item["skill"] not in generated
-        and item["skill"] not in bl
-        and not item["skill"].startswith("skill-habit:")
-    ][:top_skills_n]
 
-    # Recompute total_stats excluding generated shortcuts and meta-skills
-    stats = report["total_stats"].copy()
-    stats["unique_skills"] = sum(
-        1 for item in report["top_skills"]
-        if item["skill"] not in generated
-        and not item["skill"].startswith("skill-habit:")
+    excl_self = config.get("exclude_self_tracking", True)
+    exclude_prefix = "skill-habit:" if excl_self else None
+    exclude_skills = (set(config.get("_exclude_skills", [])) | generated | bl) or None
+
+    fetch_n = max(top_n, top_skills_n) + (len(generated) + len(bl)) + 10
+    report = analyzer.full_report(
+        time_window, top_n=fetch_n,
+        exclude_prefix=exclude_prefix,
+        exclude_skills=exclude_skills,
     )
+
+    filtered_top_skills = report["top_skills"][:top_skills_n]
+    stats = report["total_stats"].copy()
+    stats["unique_skills"] = len(report["top_skills"])
 
     cache: dict[str, Any] = {
         "built_at": int(time.time()),

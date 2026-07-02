@@ -69,7 +69,7 @@ def last_used_per_skill() -> dict[str, int]:
     return last
 
 
-def transition_matrix(time_window: str = "all") -> dict[str, dict[str, int]]:
+def transition_matrix(time_window: str = "all", exclude_prefix: str | None = None) -> dict[str, dict[str, int]]:
     """Build a Markov chain: {skill_a: {skill_b: count}} from session sequences."""
     entries = _load_entries(time_window)
     sessions: dict[str, list[tuple[int, str]]] = defaultdict(list)
@@ -77,7 +77,7 @@ def transition_matrix(time_window: str = "all") -> dict[str, dict[str, int]]:
         sid = e.get("session_id", "")
         seq = e.get("session_skill_seq", 0)
         skill = e.get("skill", "")
-        if skill:
+        if skill and not (exclude_prefix and skill.startswith(exclude_prefix)):
             sessions[sid].append((seq, skill))
 
     matrix: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -158,24 +158,28 @@ def clear_log() -> int:
     return count
 
 
-def total_stats(time_window: str = "all", exclude_skills: set | None = None) -> dict[str, Any]:
+def total_stats(time_window: str = "all", exclude_skills: set | None = None, exclude_prefix: str | None = None) -> dict[str, Any]:
     entries = _load_entries(time_window)
     skills: set[str] = set()
     sessions: set[str] = set()
+    total_inv = 0
     for e in entries:
         skill = e.get("skill", "")
-        if skill and not (exclude_skills and skill in exclude_skills):
+        if skill and not (exclude_skills and skill in exclude_skills) and not (exclude_prefix and skill.startswith(exclude_prefix)):
             skills.add(skill)
+            total_inv += 1
         if "session_id" in e:
             sessions.add(e["session_id"])
     return {
-        "total_invocations": len(entries),
+        "total_invocations": total_inv,
         "unique_skills": len(skills),
         "unique_sessions": len(sessions),
     }
 
 
-def full_report(time_window: str = "all", top_n: int = 50) -> dict[str, Any]:
+def full_report(time_window: str = "all", top_n: int = 50,
+                exclude_prefix: str | None = None,
+                exclude_skills: set[str] | None = None) -> dict[str, Any]:
     """Load entries once and compute all analytics in a single pass.
 
     Returns a dict with keys: top_skills, last_used, total_stats, hourly,
@@ -195,11 +199,18 @@ def full_report(time_window: str = "all", top_n: int = 50) -> dict[str, Any]:
     heatmap_cutoff = int(time.time()) - 52 * 7 * _SECONDS_PER_DAY
     day_counts: Counter[str] = Counter()
 
+    def _excluded(s: str) -> bool:
+        if exclude_prefix and s.startswith(exclude_prefix):
+            return True
+        if exclude_skills and s in exclude_skills:
+            return True
+        return False
+
     for e in entries:
         skill = e.get("skill", "")
         ts = e.get("ts", 0)
 
-        if skill:
+        if skill and not _excluded(skill):
             counts[skill] += 1
             skills_set.add(skill)
             if ts > last_used.get(skill, 0):
@@ -208,7 +219,7 @@ def full_report(time_window: str = "all", top_n: int = 50) -> dict[str, Any]:
         sid = e.get("session_id", "")
         if sid:
             sessions_set.add(sid)
-            if skill:
+            if skill and not _excluded(skill):
                 sessions_map[sid].append((e.get("session_skill_seq", 0), skill))
 
         hourly[e.get("hour", 0) % 24] += 1

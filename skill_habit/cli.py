@@ -44,6 +44,10 @@ def cmd_rebuild(argv: list[str]) -> int:
     return _run("scripts/build_cache.py")
 
 
+def cmd_uninstall(argv: list[str]) -> int:
+    return subprocess.call(["bash", str(_ROOT / "scripts" / "install.sh"), "--uninstall"])
+
+
 def cmd_migrate(argv: list[str]) -> int:
     """Backfill missing fields in historical log entries."""
     p = argparse.ArgumentParser(
@@ -68,6 +72,7 @@ def cmd_version(argv: list[str]) -> int:
 
 _COMMANDS = {
     "install": cmd_install,
+    "uninstall": cmd_uninstall,
     "server": cmd_server,
     "rebuild": cmd_rebuild,
     "migrate": cmd_migrate,
@@ -78,11 +83,12 @@ _USAGE = """\
 usage: skill-habit <command> [options]
 
 Commands:
-  install    Register hooks in Claude Code settings.json
-  server     Open the management UI in your browser
-  rebuild    Force-rebuild /sh:* shortcuts and analytics cache
-  migrate    Backfill missing fields in historical log entries
-  version    Print version and exit
+  install      Register hooks in Claude Code settings.json
+  uninstall    Remove hooks and generated skills
+  server       Open the management UI in your browser
+  rebuild      Force-rebuild /sh:* shortcuts and analytics cache
+  migrate      Backfill missing fields in historical log entries
+  version      Print version and exit
 
 Run `skill-habit <command> --help` for command-specific help.
 """

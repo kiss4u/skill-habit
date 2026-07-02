@@ -1,0 +1,22 @@
+{
+  "name": "skill-habit",
+  "metadata": {
+    "description": "skill-habit - Track your AI skill usage habits and auto-sort commands by frequency",
+    "version": "0.0.2"
+  },
+  "owner": {
+    "name": "kiss4u"
+  },
+  "plugins": [
+    {
+      "name": "skill-habit",
+      "description": "Track your AI skill usage habits, auto-sort commands by frequency. Built-in analytics, heatmap, association prediction, and Web UI.",
+      "author": {
+        "name": "kiss4u"
+      },
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/kiss4u/skill-habit"
+    }
+  ]
+}

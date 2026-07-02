@@ -381,7 +381,7 @@ select:focus, input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px va
 /* Table header */
 .skills-table-header {
   display: grid;
-  grid-template-columns: 28px 24px 140px 1fr 1fr 60px 100px 100px;
+  grid-template-columns: 28px 140px 1fr 1fr 60px 100px 100px;
   gap: 8px; padding: 4px 6px 6px;
   border-bottom: 2px solid var(--border);
   font-size: 11px; font-weight: 600; color: var(--fg2); text-transform: uppercase; letter-spacing: .04em;
@@ -389,7 +389,7 @@ select:focus, input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px va
 /* Table rows */
 .skill-tbl-row {
   display: grid;
-  grid-template-columns: 28px 24px 140px 1fr 1fr 60px 100px 100px;
+  grid-template-columns: 28px 140px 1fr 1fr 60px 100px 100px;
   gap: 8px; align-items: start;
   padding: 7px 6px; border-bottom: 1px solid var(--border);
   transition: background .1s;
@@ -414,8 +414,8 @@ select:focus, input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px va
 .move-btn { width: 20px; height: 20px; border: 1px solid var(--border); background: var(--bg2); border-radius: 3px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: var(--fg2); transition: all .15s; flex-shrink: 0; }
 .move-btn:hover:not([disabled]) { border-color: var(--brand); color: var(--brand); }
 .move-btn[disabled] { opacity: .3; cursor: default; }
-.edit-btn { font-size: 12px; color: var(--fg2); background: none; border: none; cursor: pointer; padding: 1px 4px; border-radius: 4px; line-height: 1; flex-shrink: 0; }
-.edit-btn:hover { color: var(--brand); }
+.edit-btn { font-size: 12px; color: var(--fg2); background: none; border: none; cursor: pointer; padding: 1px 4px; border-radius: 4px; line-height: 1; flex-shrink: 0; opacity: .35; transition: opacity .15s, color .15s; }
+.edit-btn:hover { opacity: 1; color: var(--brand); }
 .save-btn-sm { font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer; background: var(--brand); color: #fff; border: none; font-weight: 500; flex-shrink: 0; }
 .cancel-btn-sm { font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer; background: none; border: 1px solid var(--border); color: var(--fg2); flex-shrink: 0; }
 .pin-btn { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
@@ -443,22 +443,46 @@ select:focus, input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px va
 .sub-tbl-row:last-child { border-bottom: none; }
 .sub-tbl-row:hover { background: var(--bg2); border-radius: 6px; }
 .sub-tbl-empty { font-size: 12px; color: var(--fg3,var(--fg2)); font-style: italic; padding: 6px 0; }
-.sub-seq { font-size: 12px; color: var(--fg); text-align: left; font-variant-numeric: tabular-nums; }
+.sub-seq { font-size: 12px; color: var(--fg2); text-align: left; font-variant-numeric: tabular-nums; }
 .sub-name { font-family: monospace; font-size: 12px; color: var(--brand); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sub-desc { font-size: 12px; color: var(--fg2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub-desc { font-size: 12px; color: var(--fg2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
+.sub-desc:hover { white-space: normal; overflow: visible; text-overflow: clip; color: var(--fg); }
 .sub-actions { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
 .card-title.collapsible { cursor: pointer; user-select: none; margin-bottom: 0; }
 .card-title.collapsible + * { margin-top: 14px; }
 .collapse-arrow { margin-left: auto; font-size: 10px; opacity: .45; }
 .bl-btn, .unbl-btn { width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 4px; cursor: pointer; border: none; background: none; color: var(--fg2);
-  font-size: 13px; padding: 0; transition: color .15s; flex-shrink: 0; }
-.bl-btn:hover { color: #dc2626; }
-.unbl-btn:hover { color: var(--brand); }
+  font-size: 13px; padding: 0; transition: opacity .15s, color .15s; flex-shrink: 0; opacity: .35; }
+.bl-btn:hover { opacity: 1; color: #dc2626; }
+.unbl-btn:hover { opacity: 1; color: var(--brand); }
+#sh-confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:2000; align-items:center; justify-content:center; }
+#sh-confirm-overlay.open { display:flex; }
+#sh-confirm-box { background:var(--card-bg); border:1px solid var(--border); border-radius:10px; padding:20px 22px 16px; min-width:280px; max-width:360px; box-shadow:0 8px 24px rgba(0,0,0,.18); }
+#sh-confirm-msg { font-size:13px; color:var(--fg); line-height:1.5; margin-bottom:14px; }
+#sh-confirm-nag { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--fg2); margin-bottom:14px; cursor:pointer; user-select:none; }
+#sh-confirm-nag input { cursor:pointer; accent-color:var(--brand); }
+#sh-confirm-btns { display:flex; justify-content:flex-end; gap:8px; }
+#sh-confirm-btns button { font-size:13px; padding:5px 14px; border-radius:6px; border:1px solid var(--border); cursor:pointer; }
+#sh-confirm-ok { background:var(--brand); color:#fff; border-color:var(--brand); font-weight:600; }
+#sh-confirm-ok:hover { filter:brightness(1.1); }
+#sh-confirm-cancel { background:none; color:var(--fg); }
+#sh-confirm-cancel:hover { background:var(--bg2); }
 </style>
 <script src="/locales/bundle.js"></script>
 </head>
 <body>
+
+<div id="sh-confirm-overlay">
+  <div id="sh-confirm-box">
+    <div id="sh-confirm-msg"></div>
+    <label id="sh-confirm-nag"><input type="checkbox" id="sh-confirm-nag-cb"> <span id="sh-confirm-nag-label"></span></label>
+    <div id="sh-confirm-btns">
+      <button id="sh-confirm-cancel"></button>
+      <button id="sh-confirm-ok"></button>
+    </div>
+  </div>
+</div>
 
 <div id="update-banner">
   <div class="banner-inner">
@@ -636,6 +660,8 @@ async function renderSkills() {
     fetch(url).then(r => r.json()).catch(() => null),
     _loadBlacklist(),
     _loadUnusedSkills(),
+    _loadPluginGroups(),
+    _loadCommands(),
   ])
   skillsState.data = data
   _renderSkillsDom()
@@ -645,6 +671,9 @@ function _renderSkillsDom() {
   const _hadSearchFocus = document.activeElement?.classList?.contains('skills-search-input')
   const _searchCursorStart = _hadSearchFocus ? document.activeElement.selectionStart : null
   const _searchCursorEnd   = _hadSearchFocus ? document.activeElement.selectionEnd   : null
+  const _hadUnusedFocus = document.activeElement?.classList?.contains('unused-search-input')
+  const _unusedCursorStart = _hadUnusedFocus ? document.activeElement.selectionStart : null
+  const _unusedCursorEnd   = _hadUnusedFocus ? document.activeElement.selectionEnd   : null
   const data   = skillsState.data
   const pinned = cfg.pinned_skills || []
   const prefix = cfg.prefix || 'sh'
@@ -656,7 +685,7 @@ function _renderSkillsDom() {
   const skills = allSkills.filter(s => (s.count > 0 || s.is_pinned) && !_bl.has(s.name))
 
   if (!data || (!skills.length && !skillsState.q)) {
-    el.innerHTML = `<div class="card">${_emptySkillsHTML()}</div>${_unusedCard()}${_blacklistCard()}`
+    el.innerHTML = `<div class="card">${_emptySkillsHTML()}</div>${_unusedCard()}${_blacklistCard()}${_pluginGroupsCard()}${_commandsCard()}`
     return
   }
 
@@ -692,18 +721,23 @@ function _renderSkillsDom() {
       ${controls}${rows}${pager}
     </div>
     ${_unusedCard()}
-    ${_blacklistCard()}`
+    ${_blacklistCard()}
+    ${_pluginGroupsCard()}
+    ${_commandsCard()}`
 
   if (_hadSearchFocus) {
     const inp = el.querySelector('.skills-search-input')
     if (inp) { inp.focus(); if (_searchCursorStart !== null) inp.setSelectionRange(_searchCursorStart, _searchCursorEnd) }
   }
+  if (_hadUnusedFocus) {
+    const inp = el.querySelector('.unused-search-input')
+    if (inp) { inp.focus(); if (_unusedCursorStart !== null) inp.setSelectionRange(_unusedCursorStart, _unusedCursorEnd) }
+  }
 }
 
 function _skillsTableHeader() {
   return `<div class="skills-table-header">
-    <div style="opacity:.5">${t('col_num')}</div>
-    <div></div>
+    <div>${t('col_num')}</div>
     <div>${t('col_command')}</div>
     <div>${t('col_desc')}</div>
     <div>${t('col_orig_desc')}</div>
@@ -713,17 +747,17 @@ function _skillsTableHeader() {
   </div>`
 }
 
-function _fmtDate(ts) {
-  if (!ts) return t('never_used')
-  const now = Date.now() / 1000
-  const diff = now - ts
-  if (diff < 86400)   return t('today')
-  if (diff < 172800)  return t('yesterday')
-  const days = Math.floor(diff / 86400)
-  if (days < 30)  return tf('rel_days', days)
-  const mo = Math.floor(days / 30)
-  if (days < 365) return tf('rel_months', mo)
-  return tf('rel_years', Math.floor(days / 365))
+function _fmtDate(ts, fallback) {
+  if (!ts) return fallback !== undefined ? fallback : t('never_used')
+  const d = new Date(ts * 1000), now = new Date()
+  const daysDiff = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) -
+                               Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000)
+  if (daysDiff === 0) return t('today')
+  if (daysDiff === 1) return t('yesterday')
+  if (daysDiff < 30)  return tf('rel_days', daysDiff)
+  const mo = Math.floor(daysDiff / 30)
+  if (daysDiff < 365) return tf('rel_months', mo)
+  return tf('rel_years', Math.floor(daysDiff / 365))
 }
 
 function _skillRow(skill, pinned, prefix, idx) {
@@ -761,7 +795,6 @@ function _skillRow(skill, pinned, prefix, idx) {
 
   return `<div class="skill-tbl-row ${isPinned?'is-pinned':''} ${isEditing?'is-editing':''}">
     <div class="stc-seq">${idx}</div>
-    <div class="stc-pin">${isPinned ? '📌' : ''}</div>
     <div class="stc-name" title="/${prefix}:${skill.name}">${_esc(skill.name)}</div>
     ${descCell}
     ${origCell}
@@ -769,12 +802,12 @@ function _skillRow(skill, pinned, prefix, idx) {
     <div class="stc-date">${_fmtDate(skill.last_used)}</div>
     <div class="stc-actions">
       ${!isEditing ? `
+      <button class="edit-btn" data-skill="${safeName}" data-desc="${safeDesc}" onmousedown="event.preventDefault();startEditFromEl(this)" title="${t('edit_desc')}">✏️</button>
       <button class="pin-btn ${isPinned?'pinned':''}" onclick="togglePin('${safeName}')" title="${isPinned?t('unpin'):t('pin')}">📌</button>
       ${isPinned && pinned.length > 1 ? `
       <button class="move-btn" onclick="movePin('${safeName}','up')" ${canUp?'':'disabled'} title="↑">↑</button>
       <button class="move-btn" onclick="movePin('${safeName}','down')" ${canDown?'':'disabled'} title="↓">↓</button>` : ''}
-      <button class="edit-btn" data-skill="${safeName}" data-desc="${safeDesc}" onmousedown="event.preventDefault();startEditFromEl(this)" title="${t('edit_desc')}">✏️</button>
-      ${!cfg.blacklist?.includes(skill.name) ? `<button class="bl-btn" onclick="addToBlacklist('${safeName}')" title="${t('add_to_blacklist')}">⊘</button>` : ''}
+      ${!cfg.blacklist?.includes(skill.name) ? `<button class="bl-btn" onclick="addToBlacklist('${safeName}')" title="${t('add_to_blacklist')}">🚫</button>` : ''}
       ` : ''}
     </div>
   </div>`
@@ -838,7 +871,9 @@ function descKey(e, name) {
 
 /* ── Blacklist ───────────────────────────────────────────────────── */
 let blState = { page: 1, per_page: 10, data: null, open: false }
-let unusedState = { open: false, data: null, page: 1, per_page: 10 }
+let unusedState = { open: false, data: null, page: 1, per_page: 10, q: '' }
+let pluginGroupsState = { open: false, data: null, removing: null, page: 1, per_page: 10, expandedGroup: null }
+let commandsState = { open: false, data: null, page: 1, per_page: 10, expandedNs: null, cmd_page: 1, cmd_per_page: 10 }
 
 async function _loadBlacklist() {
   const { page, per_page } = blState
@@ -852,12 +887,22 @@ async function _loadUnusedSkills() {
   unusedState.page = 1
 }
 
+async function _loadPluginGroups() {
+  const d = await fetch('/api/skill-groups').then(r => r.json()).catch(() => null)
+  pluginGroupsState.data = d ? d.groups : []
+}
+
+async function _loadCommands() {
+  const d = await fetch('/api/commands').then(r => r.json()).catch(() => null)
+  commandsState.data = d ? d.groups : []
+}
+
 function _subTblHeader() {
   return `<div class="sub-tbl-hdr sub-tbl-cols">
-    <div style="opacity:.5">${t('col_num')}</div>
+    <div>${t('col_num')}</div>
     <div></div>
     <div>${t('col_command')}</div>
-    <div>${t('col_desc')}</div>
+    <div>${t('col_desc_plain')}</div>
     <div style="text-align:right">${t('col_actions')}</div>
   </div>`
 }
@@ -880,7 +925,7 @@ function _blListHtml() {
     <div class="sub-tbl-row sub-tbl-cols">
       <span class="sub-seq">${offset + i + 1}</span>
       <span></span>
-      <span class="sub-name">/${_esc(item.name)}</span>
+      <span class="sub-name">${_esc(item.name)}</span>
       <span class="sub-desc">${_esc(item.description || '')}</span>
       <div class="sub-actions">
         <button class="unbl-btn" onclick="removeFromBlacklist('${_esc(item.name)}')" title="${t('remove_from_blacklist')}">✕</button>
@@ -890,6 +935,7 @@ function _blListHtml() {
 }
 
 function _blacklistCard() {
+  if (cfg.show_blacklist === false) return ''
   const count = blState.data?.total || 0
   const badge = count > 0 ? ` (${count})` : ''
   return `<div class="card" id="blacklist-card">
@@ -902,6 +948,7 @@ function _blacklistCard() {
 }
 
 function _unusedCard() {
+  if (cfg.show_unused === false) return ''
   const data = unusedState.data
   const badge = data !== null ? ` (${data.length})` : ''
   let body = ''
@@ -911,23 +958,41 @@ function _unusedCard() {
     } else if (data.length === 0) {
       body = `<p class="card-hint" style="font-style:italic">${t('unused_empty')}</p>`
     } else {
+      const q = (unusedState.q || '').trim().toLowerCase()
+      const filtered = q ? data.filter(s =>
+        s.name.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q)
+      ) : data
       const { page, per_page } = unusedState
-      const totalPages = Math.ceil(data.length / per_page) || 1
-      const slice = data.slice((page - 1) * per_page, page * per_page)
-      const offset = (page - 1) * per_page
-      body = `<p class="card-hint">${t('unused_hint')}</p>` +
-        _subTblHeader() +
-        slice.map((s, i) => `<div class="sub-tbl-row sub-tbl-cols">
+      const totalPages = Math.ceil(filtered.length / per_page) || 1
+      const safePage = Math.min(page, totalPages)
+      const slice = filtered.slice((safePage - 1) * per_page, safePage * per_page)
+      const offset = (safePage - 1) * per_page
+      const ucols = '28px 140px minmax(0,1fr) 88px 44px'
+      const uhdr = `<div class="sub-tbl-hdr" style="display:grid;grid-template-columns:${ucols};gap:8px;padding:4px 6px 6px;border-bottom:2px solid var(--border);font-size:11px;font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:.04em">
+        <div>${t('col_num')}</div>
+        <div>${t('col_command')}</div>
+        <div>${t('col_desc_plain')}</div>
+        <div>${t('col_install_time')}</div>
+        <div style="text-align:right">${t('col_actions')}</div>
+      </div>`
+      const emptyRow = filtered.length === 0
+        ? `<div style="text-align:center;padding:20px 0;color:var(--fg2);font-size:12px">${t('no_results')}</div>` : ''
+      body = `<p class="card-hint">${t('unused_hint')}</p>
+        <input type="text" class="unused-search-input" placeholder="${t('search_skills')}"
+               value="${_esc(unusedState.q)}" oninput="unusedSearch(this.value)"
+               style="width:100%;box-sizing:border-box;margin-bottom:8px">` +
+        uhdr + emptyRow +
+        slice.map((s, i) => `<div class="sub-tbl-row" style="display:grid;grid-template-columns:${ucols};gap:8px;align-items:center;padding:7px 6px;border-bottom:${i===slice.length-1?'none':'1px solid var(--border)'}">
           <span class="sub-seq">${offset + i + 1}</span>
-          <span></span>
-          <span class="sub-name">/${_esc(s.name)}</span>
+          <span class="sub-name">${_esc(s.name)}</span>
           <span class="sub-desc">${_esc(s.description || '')}</span>
+          <span class="sub-desc">${_fmtDate(s.install_time, '—')}</span>
           <div class="sub-actions">
             <button class="pin-btn" onclick="togglePin('${_esc(s.name)}')" title="${t('pin')}">📌</button>
-            <button class="bl-btn" onclick="addToBlacklist('${_esc(s.name)}')" title="${t('add_to_blacklist')}">⊘</button>
+            <button class="bl-btn" onclick="addToBlacklist('${_esc(s.name)}')" title="${t('add_to_blacklist')}">🚫</button>
           </div>
         </div>`).join('') +
-        _pager(page, totalPages, `unusedPage(${page-1})`, `unusedPage(${page+1})`)
+        _pager(safePage, totalPages, `unusedPage(${safePage-1})`, `unusedPage(${safePage+1})`)
     }
   }
   return `<div class="card">
@@ -939,11 +1004,224 @@ function _unusedCard() {
   </div>`
 }
 
-function toggleBlSection() { blState.open = !blState.open; _renderSkillsDom() }
-function toggleUnused()    { unusedState.open = !unusedState.open; _renderSkillsDom() }
-function unusedPage(p)     { unusedState.page = p; _renderSkillsDom() }
+function toggleBlSection()     { blState.open = !blState.open; _renderSkillsDom() }
+function toggleUnused()        { unusedState.open = !unusedState.open; _renderSkillsDom() }
+function unusedPage(p)         { unusedState.page = p; _renderSkillsDom() }
+function unusedSearch(v)       { unusedState.q = v; unusedState.page = 1; _renderSkillsDom() }
+function togglePluginGroups()        { pluginGroupsState.open = !pluginGroupsState.open; _renderSkillsDom() }
+function pluginGroupsPage(p)         { pluginGroupsState.page = p; _renderSkillsDom() }
+function pluginGroupsExpandGroup(id) { pluginGroupsState.expandedGroup = pluginGroupsState.expandedGroup === id ? null : id; _renderSkillsDom() }
+function toggleCommands()        { commandsState.open = !commandsState.open; _renderSkillsDom() }
+function commandsPage(p)         { commandsState.page = p; _renderSkillsDom() }
+function commandsExpandNs(ns)    { commandsState.expandedNs = commandsState.expandedNs === ns ? null : ns; commandsState.cmd_page = 1; _renderSkillsDom() }
+function commandsCmdPage(p)      { commandsState.cmd_page = p; _renderSkillsDom() }
 
 async function blPage(p) { blState.page = p; await _loadBlacklist(); _renderSkillsDom() }
+
+const _SH_SKIP_KEY = 'sh_skip_uninstall_confirm'
+function _confirmUninstall(name, onConfirm) {
+  if (localStorage.getItem(_SH_SKIP_KEY) === '1') { onConfirm(); return }
+  const overlay = document.getElementById('sh-confirm-overlay')
+  document.getElementById('sh-confirm-msg').textContent = tf('uninstall_confirm', { name })
+  document.getElementById('sh-confirm-nag-label').textContent = t('uninstall_no_confirm')
+  document.getElementById('sh-confirm-nag-cb').checked = false
+  document.getElementById('sh-confirm-cancel').textContent = t('cancel_edit')
+  document.getElementById('sh-confirm-ok').textContent = t('uninstall')
+  overlay.classList.add('open')
+  const ok = document.getElementById('sh-confirm-ok')
+  const cancel = document.getElementById('sh-confirm-cancel')
+  function close(confirmed) {
+    overlay.classList.remove('open')
+    ok.onclick = null; cancel.onclick = null; overlay.onclick = null
+    if (confirmed) {
+      if (document.getElementById('sh-confirm-nag-cb').checked)
+        localStorage.setItem(_SH_SKIP_KEY, '1')
+      onConfirm()
+    }
+  }
+  ok.onclick = () => close(true)
+  cancel.onclick = () => close(false)
+  overlay.onclick = e => { if (e.target === overlay) close(false) }
+}
+
+async function uninstallGroup(groupId, name, uninstallPath) {
+  _confirmUninstall(name, async () => {
+    pluginGroupsState.removing = groupId
+    _renderSkillsDom()
+    const r = await fetch('/api/skill-groups/uninstall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, uninstall_path: uninstallPath })
+    }).then(r => r.json()).catch(() => null)
+    pluginGroupsState.removing = null
+    if (r && r.ok) {
+      await _loadPluginGroups()
+      await renderSkills()
+    } else {
+      alert(t('uninstall_fail') + (r && r.error ? ': ' + r.error : ''))
+      _renderSkillsDom()
+    }
+  })
+}
+
+async function uninstallSkill(skillName, skillPath) {
+  _confirmUninstall(skillName, async () => {
+    pluginGroupsState.removing = 'skill:' + skillName
+    _renderSkillsDom()
+    const r = await fetch('/api/skill-groups/uninstall', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skill_name: skillName, uninstall_path: skillPath })
+    }).then(r => r.json()).catch(() => null)
+    pluginGroupsState.removing = null
+    if (r && r.ok) {
+      await _loadPluginGroups()
+      await renderSkills()
+    } else {
+      alert(t('uninstall_fail') + (r && r.error ? ': ' + r.error : ''))
+      _renderSkillsDom()
+    }
+  })
+}
+
+function _pluginGroupsCard() {
+  if (cfg.show_plugin_groups === false) return ''
+  const groups = pluginGroupsState.data
+  const badge = groups !== null ? ` (${groups ? groups.length : 0})` : ''
+  let body = ''
+  if (pluginGroupsState.open) {
+    if (!groups) {
+      body = `<p class="card-hint">…</p>`
+    } else if (!groups.length) {
+      body = `<p class="card-hint" style="font-style:italic">${t('plugin_groups_empty')}</p>`
+    } else {
+      const { page, per_page, expandedGroup } = pluginGroupsState
+      const totalPages = Math.ceil(groups.length / per_page) || 1
+      const slice = groups.slice((page - 1) * per_page, page * per_page)
+      const offset = (page - 1) * per_page
+      const cols = '28px 1fr 60px 36px 28px 28px'
+      const hdr = `<div class="sub-tbl-hdr" style="display:grid;grid-template-columns:${cols};gap:8px;padding:4px 6px 6px;border-bottom:2px solid var(--border);font-size:11px;font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:.04em">
+        <div>${t('col_num')}</div>
+        <div>${t('col_command')}</div>
+        <div>${t('col_version')}</div>
+        <div style="text-align:right">${t('col_skill_count')}</div>
+        <div></div>
+        <div style="text-align:right">${t('col_actions')}</div>
+      </div>`
+      const rows = slice.map((g, i) => {
+        const isRemoving = pluginGroupsState.removing === g.id
+        const isExpanded = expandedGroup === g.id
+        const isLast = i === slice.length - 1
+        const safeId = _esc(g.id), safeName = _esc(g.name), safePath = _esc(g.uninstall_path)
+        const multiSkill = g.skills.length > 1
+        const borderBottom = (!isExpanded && isLast) ? 'none' : '1px solid var(--border)'
+        const groupRow = `<div class="sub-tbl-row" style="display:grid;grid-template-columns:${cols};gap:8px;align-items:center;padding:7px 6px;border-bottom:${borderBottom}">
+          <span class="sub-seq" style="cursor:pointer" onclick="pluginGroupsExpandGroup('${safeId}')">${offset + i + 1}</span>
+          <span class="sub-name" style="font-weight:500;cursor:pointer" title="${safeName}" onclick="pluginGroupsExpandGroup('${safeId}')">${safeName}</span>
+          <span style="font-size:12px;color:var(--fg2);cursor:pointer" onclick="pluginGroupsExpandGroup('${safeId}')">${_esc(g.version || '—')}</span>
+          <span style="text-align:right;font-size:12px;color:var(--fg2);cursor:pointer" onclick="pluginGroupsExpandGroup('${safeId}')">${g.skills.length}</span>
+          <span style="font-size:11px;color:var(--fg2);text-align:center;cursor:pointer" onclick="pluginGroupsExpandGroup('${safeId}')">${isExpanded ? '▲' : '▶'}</span>
+          <div style="display:flex;justify-content:flex-end">
+            <button class="bl-btn" style="font-size:11px" onclick="uninstallGroup('${safeId}','${safeName}','${safePath}')" title="${t('uninstall')}" ${isRemoving ? 'disabled style="opacity:.4"' : ''}>🗑</button>
+          </div>
+        </div>`
+        if (!isExpanded) return groupRow
+        const skillRows = g.skills.map((s, si) => {
+          const sName = _esc(s.name || s), sDesc = _esc(s.description || ''), sPath = _esc(s.skill_path || '')
+          const isRemovingSkill = pluginGroupsState.removing === 'skill:' + (s.name || s)
+          const isLastSkill = si === g.skills.length - 1
+          const delBtn = multiSkill && sPath
+            ? `<button onclick="uninstallSkill('${sName}','${sPath}')" title="${t('uninstall')}" ${isRemovingSkill ? 'disabled' : ''} style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--fg2);opacity:.45;font-size:11px;padding:0;line-height:1" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.45">✕</button>`
+            : ''
+          return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px 5px 0;border-bottom:${isLastSkill ? 'none' : '1px solid var(--border)'}">
+            <span style="font-size:10px;color:var(--border);flex-shrink:0">└─</span>
+            <span style="font-family:monospace;font-size:12px;color:var(--brand);flex-shrink:0" title="${sDesc}">${sName}</span>
+            <span style="flex:1;font-size:12px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" title="${sDesc}">${sDesc}</span>
+            ${delBtn}
+          </div>`
+        }).join('')
+        const isLastGroup = i === slice.length - 1
+        const treeBlock = `<div style="padding:2px 6px 2px 18px;background:var(--bg2);border-bottom:${isLastGroup ? 'none' : '1px solid var(--border)'}">
+          ${skillRows}
+        </div>`
+        return groupRow + treeBlock
+      }).join('')
+      body = `<p class="card-hint">${t('plugin_groups_hint')}</p>${hdr}${rows}${_pager(page, totalPages, 'pluginGroupsPage(' + (page-1) + ')', 'pluginGroupsPage(' + (page+1) + ')')}`
+    }
+  }
+  return `<div class="card">
+    <div class="card-title collapsible" onclick="togglePluginGroups()">
+      <div class="card-icon">📂</div>${t('plugin_groups_title')}${badge}
+      <span class="collapse-arrow">${pluginGroupsState.open ? '▲' : '▼'}</span>
+    </div>
+    ${body}
+  </div>`
+}
+
+function _commandsCard() {
+  if (cfg.show_commands === false) return ''
+  const groups = commandsState.data
+  const total = groups ? groups.length : 0
+  const badge = groups !== null ? ` (${total})` : ''
+  let body = ''
+  if (commandsState.open) {
+    if (!groups) {
+      body = `<p class="card-hint">…</p>`
+    } else if (!groups.length) {
+      body = `<p class="card-hint" style="font-style:italic">${t('commands_empty')}</p>`
+    } else {
+      const { page, per_page, expandedNs, cmd_page, cmd_per_page } = commandsState
+      const totalPages = Math.ceil(groups.length / per_page) || 1
+      const slice = groups.slice((page - 1) * per_page, page * per_page)
+      const offset = (page - 1) * per_page
+      const nsCols = '28px 1fr 48px 28px'
+      const hdr = `<div class="sub-tbl-hdr" style="display:grid;grid-template-columns:${nsCols};gap:8px;padding:4px 6px 6px;border-bottom:2px solid var(--border);font-size:11px;font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:.04em">
+        <div>${t('col_num')}</div>
+        <div>${t('col_namespace')}</div>
+        <div style="text-align:right">${t('col_skill_count')}</div>
+        <div></div>
+      </div>`
+      const rows = slice.map((g, i) => {
+        const isExpanded = expandedNs === g.id
+        const isLast = i === slice.length - 1 && !isExpanded
+        const borderBottom = (!isExpanded && isLast) ? 'none' : '1px solid var(--border)'
+        const nsRow = `<div class="sub-tbl-row" style="display:grid;grid-template-columns:${nsCols};gap:8px;align-items:center;padding:7px 6px;border-bottom:${borderBottom};cursor:pointer" onclick="commandsExpandNs('${_esc(g.id)}')">
+          <span class="sub-seq">${offset + i + 1}</span>
+          <span class="sub-name" style="font-weight:500">${_esc(g.name)}</span>
+          <span style="text-align:right;font-size:12px;color:var(--fg2)">${g.commands.length}</span>
+          <span style="font-size:11px;color:var(--fg2);text-align:center">${isExpanded ? '▲' : '▶'}</span>
+        </div>`
+        if (!isExpanded) return nsRow
+        // Tree children: commands paginated, indented under namespace with left border line
+        const cmds = g.commands
+        const totalCmdPages = Math.ceil(cmds.length / cmd_per_page) || 1
+        const cmdSlice = cmds.slice((cmd_page - 1) * cmd_per_page, cmd_page * cmd_per_page)
+        const cmdRows = cmdSlice.map((cmd, ci) => {
+          const isLastCmd = ci === cmdSlice.length - 1 && totalCmdPages <= 1
+          return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px 5px 0;border-bottom:${isLastCmd ? 'none' : '1px solid var(--border)'}">
+            <span style="font-size:10px;color:var(--border);flex-shrink:0">└─</span>
+            <span style="font-family:monospace;font-size:12px;color:var(--brand);flex-shrink:0">/${_esc(cmd.name)}</span>
+            <span style="font-size:12px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" title="${_esc(cmd.description)}">${_esc(cmd.description)}</span>
+          </div>`
+        }).join('')
+        const cmdPager = totalCmdPages > 1 ? _pager(cmd_page, totalCmdPages, `commandsCmdPage(${cmd_page-1})`, `commandsCmdPage(${cmd_page+1})`) : ''
+        const isLastGroup = i === slice.length - 1
+        const treeBlock = `<div style="padding:2px 6px 2px 18px;background:var(--bg2);border-bottom:${isLastGroup ? 'none' : '1px solid var(--border)'}">
+          ${cmdRows}${cmdPager}
+        </div>`
+        return nsRow + treeBlock
+      }).join('')
+      body = `<p class="card-hint">${t('commands_hint')}</p>${hdr}${rows}${_pager(page, totalPages, 'commandsPage('+(page-1)+')', 'commandsPage('+(page+1)+')')}`
+    }
+  }
+  return `<div class="card">
+    <div class="card-title collapsible" onclick="toggleCommands()">
+      <div class="card-icon">⌨️</div>${t('commands_title')}${badge}
+      <span class="collapse-arrow">${commandsState.open ? '▲' : '▼'}</span>
+    </div>
+    ${body}
+  </div>`
+}
 
 async function addToBlacklist(name) {
   await fetch('/api/blacklist/add', { method: 'POST', body: JSON.stringify({ skill: name }) })
@@ -1326,7 +1604,21 @@ function renderSettings() {
         <input type="number" id="cfg-rerank-interval" value="${Math.min(3600,Math.max(10,c.rerank_interval_secs??60))}" min="10" max="3600" oninput="autoSave()">
       </div>
       <div class="s-row">
-        <div><div class="s-lbl">${t('f_seq')}</div><div class="s-sub">${t('f_seq_sub')}</div></div>
+        <div><div class="s-lbl">${t('f_commands_shortcuts')}</div><div class="s-sub">${t('f_commands_shortcuts_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-commands-shortcuts-group">
+          <button class="mode-btn ${c.commands_generate_shortcuts!==false?'active':''}" data-value="on" onclick="selectOption('cfg-commands-shortcuts-group','on');autoSave(0)">${t('opt_on')}</button>
+          <button class="mode-btn ${c.commands_generate_shortcuts===false?'active':''}" data-value="off" onclick="selectOption('cfg-commands-shortcuts-group','off');autoSave(0)">${t('opt_off')}</button>
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_exclude_self')}</div><div class="s-sub">${t('f_exclude_self_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-exclude-self-group">
+          <button class="mode-btn ${c.exclude_self_tracking!==false?'active':''}" data-value="on" onclick="selectOption('cfg-exclude-self-group','on');autoSave(0)">${t('opt_on')}</button>
+          <button class="mode-btn ${c.exclude_self_tracking===false?'active':''}" data-value="off" onclick="selectOption('cfg-exclude-self-group','off');autoSave(0)">${t('opt_off')}</button>
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_seq')}</div><div class="s-sub">${tf('f_seq_sub',{prefix:c.prefix||'sh'})}</div></div>
         <div class="mode-btn-group" id="cfg-seq-group">
           <button class="mode-btn ${c.enable_sequence_prediction!==false?'active':''}" data-value="on" onclick="selectOption('cfg-seq-group','on');autoSave(0)">${t('opt_on')}</button>
           <button class="mode-btn ${c.enable_sequence_prediction===false?'active':''}" data-value="off" onclick="selectOption('cfg-seq-group','off');autoSave(0)">${t('opt_off')}</button>
@@ -1335,6 +1627,34 @@ function renderSettings() {
       <div class="s-row">
         <div><div class="s-lbl">${t('f_prediction_n')}</div><div class="s-sub">${t('f_prediction_n_sub')}</div></div>
         <input type="number" id="cfg-prediction-n" value="${Math.min(5,Math.max(1,c.prediction_n??5))}" min="1" max="5" oninput="autoSave()">
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_show_plugin_groups')}</div><div class="s-sub">${t('f_show_plugin_groups_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-show-plugin-groups-group">
+          <button class="mode-btn ${c.show_plugin_groups!==false?'active':''}" data-value="on" onclick="selectOption('cfg-show-plugin-groups-group','on');autoSave(0)">${t('opt_on')}</button>
+          <button class="mode-btn ${c.show_plugin_groups===false?'active':''}" data-value="off" onclick="selectOption('cfg-show-plugin-groups-group','off');autoSave(0)">${t('opt_off')}</button>
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_show_commands')}</div><div class="s-sub">${t('f_show_commands_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-show-commands-group">
+          <button class="mode-btn ${c.show_commands!==false?'active':''}" data-value="on" onclick="selectOption('cfg-show-commands-group','on');autoSave(0)">${t('opt_on')}</button>
+          <button class="mode-btn ${c.show_commands===false?'active':''}" data-value="off" onclick="selectOption('cfg-show-commands-group','off');autoSave(0)">${t('opt_off')}</button>
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_show_unused')}</div><div class="s-sub">${t('f_show_unused_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-show-unused-group">
+          <button class="mode-btn ${c.show_unused!==false?'active':''}" data-value="on" onclick="selectOption('cfg-show-unused-group','on');autoSave(0)">${t('opt_on')}</button>
+          <button class="mode-btn ${c.show_unused===false?'active':''}" data-value="off" onclick="selectOption('cfg-show-unused-group','off');autoSave(0)">${t('opt_off')}</button>
+        </div>
+      </div>
+      <div class="s-row">
+        <div><div class="s-lbl">${t('f_show_blacklist')}</div><div class="s-sub">${t('f_show_blacklist_sub')}</div></div>
+        <div class="mode-btn-group" id="cfg-show-blacklist-group">
+          <button class="mode-btn ${c.show_blacklist!==false?'active':''}" data-value="on" onclick="selectOption('cfg-show-blacklist-group','on');autoSave(0)">${t('opt_on')}</button>
+          <button class="mode-btn ${c.show_blacklist===false?'active':''}" data-value="off" onclick="selectOption('cfg-show-blacklist-group','off');autoSave(0)">${t('opt_off')}</button>
+        </div>
       </div>
     </div>
 
@@ -1642,10 +1962,10 @@ async function checkUpdate() {
   const notesWrap = document.getElementById('update-notes-wrap')
   const notesLabel = document.getElementById('update-notes-label')
   const notesText = document.getElementById('update-notes-text')
-  if (btn) btn.disabled = true
-  if (info) info.textContent = t('checking')
+  if (btn) { btn.disabled = true; btn.textContent = t('checking') }
+  if (info) info.textContent = ''
   const r = await fetch('/api/version').then(r => r.json()).catch(() => null)
-  if (btn) btn.disabled = false
+  if (btn) { btn.disabled = false; btn.textContent = t('check_update') }
   if (!r) { if (info) info.textContent = '—'; return }
   _versionResult = r
   const hasUpdate = !!r.update_level
@@ -1699,6 +2019,7 @@ async function saveSettings() {
     top_n:    Math.min(50, Math.max(3, parseInt(document.getElementById('cfg-topn').value) || 5)),
     numeric_n: Math.min(9, Math.max(1, parseInt(document.getElementById('cfg-numeric-n')?.value) || 5)),
     time_window: document.querySelector('#cfg-tw-group .mode-btn.active')?.dataset.value || 'all',
+    exclude_self_tracking: document.querySelector('#cfg-exclude-self-group .mode-btn.active')?.dataset.value !== 'off',
     enable_sequence_prediction: document.querySelector('#cfg-seq-group .mode-btn.active')?.dataset.value !== 'off',
     prediction_n: Math.min(5, Math.max(1, parseInt(document.getElementById('cfg-prediction-n')?.value) || 5)),
     theme:    document.querySelector('#cfg-theme-group .mode-btn.active')?.dataset.value || 'system',
@@ -1707,6 +2028,11 @@ async function saveSettings() {
     top_skills_n: Math.min(50, Math.max(3, parseInt(document.getElementById('cfg-top-skills-n')?.value ?? '5') || 5)),
     rerank_interval_secs: Math.min(3600, Math.max(10, parseInt(document.getElementById('cfg-rerank-interval')?.value) || 60)),
     log_retention_days: Math.min(3650, Math.max(0, parseInt(document.getElementById('cfg-retention')?.value ?? '30') || 0)),
+    commands_generate_shortcuts: document.querySelector('#cfg-commands-shortcuts-group .mode-btn.active')?.dataset.value !== 'off',
+    show_plugin_groups: document.querySelector('#cfg-show-plugin-groups-group .mode-btn.active')?.dataset.value !== 'off',
+    show_commands: document.querySelector('#cfg-show-commands-group .mode-btn.active')?.dataset.value !== 'off',
+    show_unused: document.querySelector('#cfg-show-unused-group .mode-btn.active')?.dataset.value !== 'off',
+    show_blacklist: document.querySelector('#cfg-show-blacklist-group .mode-btn.active')?.dataset.value !== 'off',
   }
   await fetch('/api/config', { method: 'POST', body: JSON.stringify(patch) })
   cfg = { ...cfg, ...patch }

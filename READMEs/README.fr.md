@@ -23,7 +23,7 @@
   <a href="#-démarrage-rapide"><img src="https://img.shields.io/badge/Quick%20Start-→-blueviolet?style=flat-square" alt="Quick Start"></a>
   <a href="../LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-✓-7c3aed?style=flat-square" alt="Claude Code">
-  <img src="https://img.shields.io/badge/Python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/Python-3.7%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.7+">
   <img src="https://img.shields.io/badge/version-0.0.1-brightgreen?style=flat-square" alt="version">
   <a href="https://github.com/kiss4u/skill-habit/stargazers"><img src="https://img.shields.io/github/stars/kiss4u/skill-habit?style=flat-square&color=orange" alt="GitHub Stars"></a>
 </p>
@@ -32,14 +32,19 @@
 
 ## Table des matières
 
-- [Le problème](#le-problème)
-- [La solution](#la-solution)
+- [🤔 Le problème](#-le-problème)
+- [💡 La solution](#-la-solution)
 - [✨ Fonctionnalités](#-fonctionnalités)
-- [🔒 Confidentialité](#-confidentialité)
+  - [🔑 Préfixe de raccourci](#-préfixe-de-raccourci)
+  - [🔮 Prédiction par association (Ordre intelligent)](#-prédiction-par-association-ordre-intelligent)
+  - [📐 Ordre des raccourcis numériques](#-ordre-des-raccourcis-numériques)
+  - [🔒 Confidentialité](#-confidentialité)
 - [🚀 Démarrage rapide](#-démarrage-rapide)
   - [Installation](#installation)
   - [Mise à niveau](#mise-à-niveau)
+  - [Désinstallation](#désinstallation)
   - [Configuration](#configuration)
+- [Skills intégrés de skill-habit](#skills-intégrés-de-skill-habit)
 - [🖥 Plateforme de gestion](#-plateforme-de-gestion)
   - [🗂 Gestion des compétences](#-gestion-des-compétences)
   - [📊 Analyses](#-analyses)
@@ -50,11 +55,11 @@
 
 ---
 
-## Le problème
+## 🤔 Le problème
 
 Vous avez installé de nombreuses compétences. Maintenant, chaque fois que vous tapez `/`, vous faites défiler toute la liste avant de pouvoir en utiliser une seule.
 
-## La solution
+## 💡 La solution
 
 skill-habit enregistre chaque compétence que vous invoquez (métadonnées uniquement — jamais le contenu de vos prompts).
 
@@ -83,9 +88,54 @@ La liste reflète vos compétences les plus utilisées, pas un ordre par défaut
 | 🔒  | **Confidentialité avant tout**    | Enregistre uniquement le nom de la compétence, l'heure et l'identifiant de session — jamais le contenu de vos prompts                                                                                                                                                                         | Tous               |
 | 🔧  | **Serveur à la demande**          | L'interface de gestion démarre quand vous en avez besoin, se ferme quand vous fermez l'onglet                                                                                                                                                                                                 | Tous               |
 
----
 
-## 🔒 Confidentialité
+### 🔑 Préfixe de raccourci
+
+Le **préfixe de raccourci** est l'espace de noms de tous les raccourcis générés par skill-habit — la valeur par défaut est `sh`. À chaque session, les raccourcis sont construits dans l'un ou les deux modes suivants (configurable) :
+
+| Mode          | Format                        | Exemple (préfixe `sh`)    | Notes                                                                                                                                   |
+| ------------- | ----------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Numérique** | `/<préfixe><N×rang>`          | `/sh1`, `/sh22`, `/sh333` | Trié par fréquence ; `/sh1` pointe toujours vers la compétence la plus utilisée ; prédiction par association mise à jour chaque session |
+| **Commande**  | `/<préfixe>-<nom-compétence>` | `/sh-git-smart`           | Appeler les compétences directement par leur nom ; ordre du menu fixé alphabétiquement par Claude Code, indépendant de la fréquence     |
+
+Allez dans **Paramètres → Général → Préfixe de raccourci**, saisissez une nouvelle valeur et enregistrez — les raccourcis se reconstruisent immédiatement. L'interface détecte les conflits en temps réel et affiche sous le champ des alternatives sans conflit sur lesquelles vous pouvez cliquer pour les appliquer.
+
+**Règles de format :** lettres, chiffres, `-`, `_` uniquement ; 5 caractères maximum.
+
+### 🔮 Prédiction par association (Ordre intelligent)
+
+Lorsque `enable_sequence_prediction` est activé, à chaque démarrage de session le système :
+
+1. Lit la dernière compétence que vous avez utilisée
+2. Interroge la matrice de transition historique pour prédire les 3 prochaines compétences les plus probables
+3. Propulse ces 3 compétences en tête de la liste de raccourcis
+
+L'efficacité dépend du mode de raccourci :
+
+| Mode                         | Effet                                                                                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Numérique** (`/sh1 /sh2…`) | La prédiction change directement quelle compétence occupe `sh1`/`sh2`. Taper `/sh1` exécute toujours la compétence recommandée. **Pleinement efficace.** |
+| **Commande** (`/sh-<name>`)  | L'ordre du menu est fixé alphabétiquement par Claude Code — la prédiction **n'a aucun effet sur l'ordre du menu**.                                        |
+
+> La précision s'améliore au fur et à mesure que les données s'accumulent. Les résultats sont significatifs après 20+ sessions.
+
+### 📐 Ordre des raccourcis numériques
+
+L'autocomplétion de Claude Code classe les suggestions principalement par **longueur totale du nom** — les noms plus courts obtiennent un score plus élevé et apparaissent en premier. skill-habit génère des raccourcis numériques avec des **longueurs de noms strictement croissantes** en répétant chaque chiffre de rang N fois :
+
+| Rang                | Raccourci | Longueur     |
+| ------------------- | --------- | ------------ |
+| 1 (le plus utilisé) | `sh1`     | 2 caractères |
+| 2                   | `sh22`    | 3 caractères |
+| 3                   | `sh333`   | 4 caractères |
+| 4                   | `sh4444`  | 5 caractères |
+| 5                   | `sh55555` | 6 caractères |
+
+Cela garantit que le menu déroulant affiche les raccourcis dans l'ordre de fréquence. Lorsque vos habitudes changent, les attributions se mettent à jour automatiquement au prochain démarrage de session.
+
+Pour invoquer : tapez `/sh1` directement, ou `/sh2` (correspondance floue sur `sh22`) et appuyez sur Entrée.
+
+### 🔒 Confidentialité
 
 skill-habit **n'enregistre jamais** le contenu des prompts, les chemins de fichiers ou les noms de projets.
 
@@ -112,7 +162,7 @@ Les entrées plus anciennes que `log_retention_days` (par défaut : 30) sont aut
 
 ## 🚀 Démarrage rapide
 
-> **Prérequis :** macOS ou Linux · Python 3.9+ · git
+> **Prérequis :** macOS ou Linux · Python 3.7+ · git
 >
 > **Windows :** Non pris en charge nativement. Utilisez [WSL](https://learn.microsoft.com/windows/wsl/) comme solution de contournement.
 
@@ -121,10 +171,16 @@ Les entrées plus anciennes que `log_retention_days` (par défaut : 30) sont aut
 **Option A — installation via plugin Claude Code (recommandé)**
 
 ```bash
-claude plugins install github:kiss4u/skill-habit
+# Étape 1 : Enregistrer le marketplace
+claude plugins marketplace add kiss4u/skill-habit
+
+# Étape 2 : Installer le plugin
+claude plugins install skill-habit@skill-habit
 ```
 
 Redémarrez Claude Code après l'installation — le suivi commence immédiatement.
+
+> Un problème avec l'option A ? L'option B fonctionne exactement pareil — utilisez-la à la place.
 
 **Option B — installation en une ligne**
 
@@ -132,9 +188,11 @@ Redémarrez Claude Code après l'installation — le suivi commence immédiateme
 curl -sSL https://raw.githubusercontent.com/kiss4u/skill-habit/main/scripts/bootstrap.sh | bash
 ```
 
+> Installation par défaut dans `~/.claude/skills/skill-habit` (le répertoire est créé automatiquement s'il n'existe pas). Pour un chemin personnalisé : `SKILL_HABIT_INSTALL_DIR=/votre/chemin curl -sSL ... | bash`
+
 **Option C — pipx / pip**
 
-> Note : cette méthode n'installe pas les skills intégrés (`/skill-habit:quick`, `/skill-habit:server`, etc.). Les options A ou B sont recommandées.
+> Note : `skill-habit install` synchronise automatiquement les skills intégrés lors de son exécution — fonctionnellement identique aux options A / B.
 
 pipx (recommandé — garde l'environnement isolé) :
 ```bash
@@ -154,27 +212,6 @@ skill-habit install
 
 Cursor, Codex CLI, Gemini CLI et d'autres sont prévus. Consultez la section Contribution pour ajouter un adaptateur.
 
-**Ouvrir l'interface de gestion**
-
-Après l'installation, ouvrez le tableau de bord avec l'une de ces méthodes :
-
-Dans Claude Code :
-```bash
-/skill-habit:server
-```
-
-Installation pip / pipx :
-```bash
-skill-habit server
-```
-
-Installation bootstrap / clone :
-```bash
-python3 ~/.local/share/skill-habit/ui/server.py
-```
-
-Le navigateur s'ouvre automatiquement. Le serveur se ferme après 5 minutes d'inactivité.
-
 ---
 
 ### Mise à niveau
@@ -184,7 +221,7 @@ Utilisez la même commande que pour l'installation — chaque méthode gère les
 **Option A — Plugin Claude Code**
 
 ```bash
-claude plugins update skill-habit
+claude plugins update skill-habit@skill-habit
 ```
 
 **Option B — en une ligne**
@@ -213,31 +250,56 @@ Vous pouvez également vérifier les mises à jour et effectuer une mise à nive
 
 ---
 
+### Désinstallation
+
+**Option A — Plugin Claude Code**
+
+```bash
+/skill-habit:uninstall
+```
+
+**Option B — Commande unique**
+
+```bash
+/skill-habit:uninstall
+```
+
+> Vous serez invité à choisir si vous souhaitez également supprimer l'historique et la configuration (`~/.skill-habit`) — choisissez selon vos besoins.
+
+**Option C — pipx / pip**
+
+pipx :
+```bash
+skill-habit uninstall
+pipx uninstall skill-habit
+```
+
+pip :
+```bash
+skill-habit uninstall
+pip uninstall skill-habit
+```
+
+---
+
 ### Configuration
 
-**Préfixe de raccourci**
+**Ouvrir l'interface de gestion**
 
-Le **préfixe de raccourci** est l'espace de noms de tous les raccourcis générés par skill-habit — la valeur par défaut est `sh`. À chaque session, les raccourcis sont construits dans l'un ou les deux modes suivants (configurable) :
+Après l'installation, ouvrez le tableau de bord avec l'une de ces méthodes :
 
-| Mode          | Format                        | Exemple (préfixe `sh`)    | Notes                                                                                                                                   |
-| ------------- | ----------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Numérique** | `/<préfixe><N×rang>`          | `/sh1`, `/sh22`, `/sh333` | Trié par fréquence ; `/sh1` pointe toujours vers la compétence la plus utilisée ; prédiction par association mise à jour chaque session |
-| **Commande**  | `/<préfixe>-<nom-compétence>` | `/sh-git-smart`           | Appeler les compétences directement par leur nom ; ordre du menu fixé alphabétiquement par Claude Code, indépendant de la fréquence     |
+Dans Claude Code (Option A / B) :
+```bash
+/skill-habit:server
+```
 
-Allez dans **Paramètres → Général → Préfixe de raccourci**, saisissez une nouvelle valeur et enregistrez — les raccourcis se reconstruisent immédiatement. L'interface détecte les conflits en temps réel et affiche sous le champ des alternatives sans conflit sur lesquelles vous pouvez cliquer pour les appliquer.
+Ligne de commande (Option C — pipx / pip) :
+```bash
+skill-habit server
+```
 
-**Règles de format :** lettres, chiffres, `-`, `_` uniquement ; 5 caractères maximum.
 
-**Skills intégrés de skill-habit**
-
-Les skills de gestion suivants sont intégrés sous forme de plugin et toujours disponibles, quel que soit le préfixe :
-
-| Skill                  | Description                                             | Quand l'utiliser                                                                                                                                            |
-| ---------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/skill-habit:quick`   | Afficher le préfixe actuel et les raccourcis numériques | Préfixe ou correspondance oublié ? Ex. de sortie : `Préfixe : sh`, `/sh1 → git-smart`                                                                       |
-| `/skill-habit:server`  | Ouvrir l'interface web de gestion dans le navigateur    | Modifier les paramètres, consulter les analyses, gérer les skills ; le navigateur s'ouvre automatiquement, le serveur s'arrête après 5 minutes d'inactivité |
-| `/skill-habit:rebuild` | Reconstruire immédiatement les raccourcis               | Après édition manuelle de `~/.skill-habit/config.json` ; les changements sauvegardés via le Web UI déclenchent automatiquement un rebuild                   |
-| `/skill-habit:version` | Afficher la version installée                           | Confirmer la version lors d'un débogage ou d'un rapport de bug                                                                                              |
+Le navigateur s'ouvre automatiquement. Le serveur se ferme après 5 minutes d'inactivité.
 
 **config.json**
 
@@ -267,38 +329,19 @@ Les skills de gestion suivants sont intégrés sous forme de plugin et toujours 
 }
 ```
 
-**🔮 Prédiction par association (Ordre intelligent)**
+---
 
-Lorsque `enable_sequence_prediction` est activé, à chaque démarrage de session le système :
+## Skills intégrés de skill-habit
 
-1. Lit la dernière compétence que vous avez utilisée
-2. Interroge la matrice de transition historique pour prédire les 3 prochaines compétences les plus probables
-3. Propulse ces 3 compétences en tête de la liste de raccourcis
+Les skills de gestion suivants sont intégrés sous forme de plugin et toujours disponibles, quel que soit le préfixe :
 
-L'efficacité dépend du mode de raccourci :
-
-| Mode                         | Effet                                                                                                                                                     |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Numérique** (`/sh1 /sh2…`) | La prédiction change directement quelle compétence occupe `sh1`/`sh2`. Taper `/sh1` exécute toujours la compétence recommandée. **Pleinement efficace.** |
-| **Commande** (`/sh-<name>`)  | L'ordre du menu est fixé alphabétiquement par Claude Code — la prédiction **n'a aucun effet sur l'ordre du menu**.                                        |
-
-> La précision s'améliore au fur et à mesure que les données s'accumulent. Les résultats sont significatifs après 20+ sessions.
-
-**📐 Ordre des raccourcis numériques**
-
-L'autocomplétion de Claude Code classe les suggestions principalement par **longueur totale du nom** — les noms plus courts obtiennent un score plus élevé et apparaissent en premier. skill-habit génère des raccourcis numériques avec des **longueurs de noms strictement croissantes** en répétant chaque chiffre de rang N fois :
-
-| Rang                | Raccourci | Longueur     |
-| ------------------- | --------- | ------------ |
-| 1 (le plus utilisé) | `sh1`     | 2 caractères |
-| 2                   | `sh22`    | 3 caractères |
-| 3                   | `sh333`   | 4 caractères |
-| 4                   | `sh4444`  | 5 caractères |
-| 5                   | `sh55555` | 6 caractères |
-
-Cela garantit que le menu déroulant affiche les raccourcis dans l'ordre de fréquence. Lorsque vos habitudes changent, les attributions se mettent à jour automatiquement au prochain démarrage de session.
-
-Pour invoquer : tapez `/sh1` directement, ou `/sh2` (correspondance floue sur `sh22`) et appuyez sur Entrée.
+| Skill                  | Description                                             | Quand l'utiliser                                                                                                                                            |
+| ---------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/skill-habit:quick`   | Afficher le préfixe actuel et les raccourcis numériques | Préfixe ou correspondance oublié ? Ex. de sortie : `Préfixe : sh`, `/sh1 → git-smart`                                                                       |
+| `/skill-habit:server`  | Ouvrir l'interface web de gestion dans le navigateur    | Modifier les paramètres, consulter les analyses, gérer les skills ; le navigateur s'ouvre automatiquement, le serveur s'arrête après 5 minutes d'inactivité. Relancer la commande redémarre le serveur (sans doublon) sur le même port fixe (5027 par défaut) ; port aléatoire en cas de conflit |
+| `/skill-habit:rebuild`    | Reconstruire immédiatement les raccourcis               | Après édition manuelle de `~/.skill-habit/config.json` ; les changements sauvegardés via le Web UI déclenchent automatiquement un rebuild                   |
+| `/skill-habit:version`    | Afficher la version installée                           | Confirmer la version lors d'un débogage ou d'un rapport de bug                                                                                              |
+| `/skill-habit:uninstall`  | Désinstaller skill-habit | Détecte automatiquement la méthode d'installation, nettoie les hooks, raccourcis et données du plugin ; demande si l'historique et la configuration doivent également être supprimés |
 
 ---
 
@@ -316,7 +359,7 @@ Ouvrez l'onglet **Compétences** pour :
 - **Mettre en liste noire** — cliquer sur **Bloquer** sur n'importe quelle ligne pour exclure une compétence du classement par fréquence et des raccourcis ; gérer la liste noire (afficher, paginer, débloquer) dans la section Liste noire repliable en bas de l'onglet
 - **Historique d'utilisation** — voir combien de fois vous avez utilisé chaque compétence et quand vous l'avez utilisée pour la dernière fois
 
-> L'onglet Compétences affiche uniquement les compétences que vous avez utilisées au moins une fois. Les compétences proviennent de `~/.claude/skills/` et de tous les plugins installés.
+> L'onglet Compétences affiche uniquement les compétences que vous avez utilisées au moins une fois. Les compétences proviennent de `~/.claude/skills/`, de tous les plugins installés, et des commandes personnalisées dans `~/.claude/commands/` (regroupées par espace de noms dans la section **Commands** en bas de page).
 
 ### 📊 Analyses
 
@@ -350,6 +393,7 @@ L'onglet **Paramètres** couvre trois cartes, les modifications prennent effet i
 | Lignes du graphique top compétences | Nombre de compétences affichées dans le graphique Analytics                                                                                |
 | Intervalle de reconstruction        | Minutes d'inactivité avant reconstruction automatique des raccourcis                                                                       |
 | Prédiction de séquence              | Prédit la prochaine compétence probable et la remonte dans la liste                                                                        |
+| Exclure soi-même des stats          | Activé : les invocations des commandes `skill-habit:*` ne sont pas comptées dans les statistiques (activé par défaut)                      |
 | Profondeur de prédiction            | Combien de compétences la prédiction peut promouvoir (1–5)                                                                                 |
 | Thème                               | Clair / Sombre / Système                                                                                                                   |
 | Langue                              | Langue de l'interface : Auto / 中文 / English / Deutsch / Français / Русский / 한국어 / 日本語                                             |

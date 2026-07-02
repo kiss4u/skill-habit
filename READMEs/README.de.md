@@ -23,7 +23,7 @@
   <a href="#-schnellstart"><img src="https://img.shields.io/badge/Quick%20Start-→-blueviolet?style=flat-square" alt="Quick Start"></a>
   <a href="../LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-✓-7c3aed?style=flat-square" alt="Claude Code">
-  <img src="https://img.shields.io/badge/Python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/Python-3.7%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python 3.7+">
   <img src="https://img.shields.io/badge/version-0.0.1-brightgreen?style=flat-square" alt="version">
   <a href="https://github.com/kiss4u/skill-habit/stargazers"><img src="https://img.shields.io/github/stars/kiss4u/skill-habit?style=flat-square&color=orange" alt="GitHub Stars"></a>
 </p>
@@ -32,14 +32,19 @@
 
 ## Inhaltsverzeichnis
 
-- [Das Problem](#das-problem)
-- [Die Lösung](#die-lösung)
+- [🤔 Das Problem](#-das-problem)
+- [💡 Die Lösung](#-die-lösung)
 - [✨ Funktionen](#-funktionen)
-- [🔒 Datenschutz](#-datenschutz)
+  - [🔑 Kürzel-Präfix](#-kürzel-präfix)
+  - [🔮 Assoziationsvorhersage (Intelligente Sortierung)](#-assoziationsvorhersage-intelligente-sortierung)
+  - [📐 Sortierung numerischer Kürzel](#-sortierung-numerischer-kürzel)
+  - [🔒 Datenschutz](#-datenschutz)
 - [🚀 Schnellstart](#-schnellstart)
   - [Installation](#installation)
   - [Upgrade](#upgrade)
+  - [Deinstallation](#deinstallation)
   - [Konfiguration](#konfiguration)
+- [Integrierte skill-habit-Skills](#integrierte-skill-habit-skills)
 - [🖥 Verwaltungsplattform](#-verwaltungsplattform)
   - [🗂 Skills-Verwaltung](#-skills-verwaltung)
   - [📊 Analysen](#-analysen)
@@ -50,11 +55,11 @@
 
 ---
 
-## Das Problem
+## 🤔 Das Problem
 
 Du hast eine Menge Skills installiert. Jetzt scrollst du bei jedem `/`-Eintippen durch die gesamte Liste, bevor du einen davon nutzen kannst.
 
-## Die Lösung
+## 💡 Die Lösung
 
 skill-habit verfolgt jeden Skill, den du aufrufst (nur Metadaten — niemals Prompt-Inhalte).
 
@@ -83,9 +88,54 @@ Die Liste spiegelt deine meistgenutzten Skills wider — keine bedeutungslose St
 | 🔒  | **Datenschutz**                      | Protokolliert nur Skill-Name, Zeit und Sitzungs-ID — niemals deine Prompt-Inhalte                                                                                                                                                                          | Alle            |
 | 🔧  | **Bedarfsgesteuerter Server**        | Die Verwaltungsoberfläche startet bei Bedarf und beendet sich beim Schließen des Tabs                                                                                                                                                                      | Alle            |
 
----
 
-## 🔒 Datenschutz
+### 🔑 Kürzel-Präfix
+
+Das **Kürzel-Präfix** ist der Namensraum für alle von skill-habit generierten Kürzel — der Standard ist `sh`. Jede Sitzung werden Kürzel in einem oder beiden der folgenden Modi erstellt (konfigurierbar):
+
+| Modus         | Format                   | Beispiel (Präfix `sh`)    | Hinweise                                                                                                                            |
+| ------------- | ------------------------ | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Numerisch** | `/<präfix><N×rang>`      | `/sh1`, `/sh22`, `/sh333` | Häufigkeitssortiert; `/sh1` zeigt immer auf den aktuell meistgenutzten Skill; Assoziationsvorhersage wird jede Sitzung aktualisiert |
+| **Befehl**    | `/<präfix>-<skill-name>` | `/sh-git-smart`           | Skills direkt nach Name aufrufen; Menüreihenfolge wird von Claude Code alphabetisch festgelegt, unabhängig von der Häufigkeit       |
+
+Gehe zu **Einstellungen → Allgemein → Kürzel-Präfix**, gib einen neuen Wert ein und speichere — die Kürzel werden sofort neu aufgebaut. Die Benutzeroberfläche erkennt Konflikte in Echtzeit und zeigt konfliktfreie Alternativen unterhalb des Eingabefelds an, die du mit einem Klick übernehmen kannst.
+
+**Formatregeln:** Nur Buchstaben, Ziffern, `-` und `_`; maximal 5 Zeichen.
+
+### 🔮 Assoziationsvorhersage (Intelligente Sortierung)
+
+Wenn `enable_sequence_prediction` aktiviert ist, führt das System bei jedem Sitzungsstart folgendes aus:
+
+1. Liest den zuletzt verwendeten Skill
+2. Fragt die historische Übergangsmatrix ab, um die 3 wahrscheinlichsten nächsten Skills vorherzusagen
+3. Hebt diese 3 Skills an die Spitze der Kürzel-Liste
+
+Wirksamkeit hängt vom Kürzelmodus ab:
+
+| Modus                        | Auswirkung                                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Numerisch** (`/sh1 /sh2…`) | Die Vorhersage ändert direkt, welcher Skill `sh1`/`sh2` belegt. Die Eingabe von `/sh1` führt immer den empfohlenen Skill aus. **Vollständig wirksam.** |
+| **Befehl** (`/sh-<name>`)    | Die Menüreihenfolge ist von Claude Code alphabetisch festgelegt — die Vorhersage **hat keinen Einfluss auf die Menüreihenfolge**.                       |
+
+> Die Genauigkeit verbessert sich mit zunehmenden Daten. Ergebnisse sind nach 20+ Sitzungen aussagekräftig.
+
+### 📐 Sortierung numerischer Kürzel
+
+Claude Codes Autovervollständigung sortiert Vorschläge hauptsächlich nach **Gesamtlänge des Namens** — kürzere Namen erzielen höhere Punkte und erscheinen zuerst. skill-habit generiert numerische Kürzel mit **streng zunehmenden Namenslängen**, indem die Rangziffer N-mal wiederholt wird:
+
+| Rang              | Kürzel    | Länge     |
+| ----------------- | --------- | --------- |
+| 1 (am häufigsten) | `sh1`     | 2 Zeichen |
+| 2                 | `sh22`    | 3 Zeichen |
+| 3                 | `sh333`   | 4 Zeichen |
+| 4                 | `sh4444`  | 5 Zeichen |
+| 5                 | `sh55555` | 6 Zeichen |
+
+Dies garantiert, dass das Dropdown Kürzel in der Häufigkeitsreihenfolge anzeigt. Wenn sich deine Nutzungsmuster ändern, werden die Kürzeluweisungen beim nächsten Sitzungsstart automatisch aktualisiert.
+
+Aufruf: `/sh1` direkt eingeben oder `/sh2` (Fuzzy-Match auf `sh22`) und Enter drücken.
+
+### 🔒 Datenschutz
 
 skill-habit **protokolliert niemals** Prompt-Inhalte, Dateipfade oder Projektnamen.
 
@@ -112,7 +162,7 @@ Protokolleinträge, die älter als `log_retention_days` (Standard: 30) sind, wer
 
 ## 🚀 Schnellstart
 
-> **Voraussetzungen:** macOS oder Linux · Python 3.9+ · git
+> **Voraussetzungen:** macOS oder Linux · Python 3.7+ · git
 >
 > **Windows:** Noch nicht nativ unterstützt. Nutze [WSL](https://learn.microsoft.com/windows/wsl/) als Workaround.
 
@@ -121,10 +171,16 @@ Protokolleinträge, die älter als `log_retention_days` (Standard: 30) sind, wer
 **Option A — Claude Code Plugin-Installation (empfohlen)**
 
 ```bash
-claude plugins install github:kiss4u/skill-habit
+# Schritt 1: Marketplace registrieren
+claude plugins marketplace add kiss4u/skill-habit
+
+# Schritt 2: Plugin installieren
+claude plugins install skill-habit@skill-habit
 ```
 
 Starte Claude Code nach der Installation neu — das Tracking beginnt sofort.
+
+> Option A nicht geklappt? Option B funktioniert genauso — nutze diese stattdessen.
 
 **Option B — Einzeilen-Installation**
 
@@ -132,9 +188,11 @@ Starte Claude Code nach der Installation neu — das Tracking beginnt sofort.
 curl -sSL https://raw.githubusercontent.com/kiss4u/skill-habit/main/scripts/bootstrap.sh | bash
 ```
 
+> Wird standardmäßig in `~/.claude/skills/skill-habit` installiert (Verzeichnis wird automatisch erstellt, falls nicht vorhanden). Für einen benutzerdefinierten Pfad: `SKILL_HABIT_INSTALL_DIR=/dein/pfad curl -sSL ... | bash`
+
 **Option C — pipx / pip**
 
-> Hinweis: Diese Methode installiert keine eingebauten Skills (`/skill-habit:quick`, `/skill-habit:server` usw.). Option A oder B wird empfohlen.
+> Hinweis: `skill-habit install` synchronisiert beim Ausführen automatisch die eingebauten Skills — funktional identisch mit Option A / B.
 
 pipx (empfohlen — hält es isoliert):
 ```bash
@@ -154,27 +212,6 @@ skill-habit install
 
 Cursor, Codex CLI, Gemini CLI und weitere sind geplant. Siehe den Abschnitt „Mitwirken", um einen Adapter hinzuzufügen.
 
-**Die Verwaltungsoberfläche öffnen**
-
-Nach der Installation das Dashboard mit einer dieser Methoden öffnen:
-
-In Claude Code:
-```bash
-/skill-habit:server
-```
-
-pip / pipx Installation:
-```bash
-skill-habit server
-```
-
-bootstrap / Klon-Installation:
-```bash
-python3 ~/.local/share/skill-habit/ui/server.py
-```
-
-Der Browser öffnet sich automatisch. Der Server beendet sich nach 5 Minuten Inaktivität.
-
 ---
 
 ### Upgrade
@@ -184,7 +221,7 @@ Verwende denselben Befehl wie bei der Installation — jede Methode behandelt Up
 **Option A — Claude Code Plugin**
 
 ```bash
-claude plugins update skill-habit
+claude plugins update skill-habit@skill-habit
 ```
 
 **Option B — Einzeiler**
@@ -213,31 +250,56 @@ Du kannst auch direkt im Panel **Einstellungen → Version & Upgrade** der Verwa
 
 ---
 
+### Deinstallation
+
+**Option A — Claude Code Plugin**
+
+```bash
+/skill-habit:uninstall
+```
+
+**Option B — Einzeiliger Befehl**
+
+```bash
+/skill-habit:uninstall
+```
+
+> Du wirst gefragt, ob du auch Nutzungshistorie und Konfigurationsdaten (`~/.skill-habit`) löschen möchtest — wähle nach Bedarf.
+
+**Option C — pipx / pip**
+
+pipx:
+```bash
+skill-habit uninstall
+pipx uninstall skill-habit
+```
+
+pip:
+```bash
+skill-habit uninstall
+pip uninstall skill-habit
+```
+
+---
+
 ### Konfiguration
 
-**Kürzel-Präfix**
+**Die Verwaltungsoberfläche öffnen**
 
-Das **Kürzel-Präfix** ist der Namensraum für alle von skill-habit generierten Kürzel — der Standard ist `sh`. Jede Sitzung werden Kürzel in einem oder beiden der folgenden Modi erstellt (konfigurierbar):
+Nach der Installation das Dashboard mit einer dieser Methoden öffnen:
 
-| Modus         | Format                   | Beispiel (Präfix `sh`)    | Hinweise                                                                                                                            |
-| ------------- | ------------------------ | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Numerisch** | `/<präfix><N×rang>`      | `/sh1`, `/sh22`, `/sh333` | Häufigkeitssortiert; `/sh1` zeigt immer auf den aktuell meistgenutzten Skill; Assoziationsvorhersage wird jede Sitzung aktualisiert |
-| **Befehl**    | `/<präfix>-<skill-name>` | `/sh-git-smart`           | Skills direkt nach Name aufrufen; Menüreihenfolge wird von Claude Code alphabetisch festgelegt, unabhängig von der Häufigkeit       |
+In Claude Code (Option A / B):
+```bash
+/skill-habit:server
+```
 
-Gehe zu **Einstellungen → Allgemein → Kürzel-Präfix**, gib einen neuen Wert ein und speichere — die Kürzel werden sofort neu aufgebaut. Die Benutzeroberfläche erkennt Konflikte in Echtzeit und zeigt konfliktfreie Alternativen unterhalb des Eingabefelds an, die du mit einem Klick übernehmen kannst.
+Kommandozeile (Option C — pipx / pip):
+```bash
+skill-habit server
+```
 
-**Formatregeln:** Nur Buchstaben, Ziffern, `-` und `_`; maximal 5 Zeichen.
 
-**Integrierte skill-habit-Skills**
-
-Die folgenden Verwaltungs-Skills sind als Plugin eingebaut und immer verfügbar, unabhängig vom Präfix:
-
-| Skill                  | Beschreibung                                    | Wann verwenden                                                                                                                       |
-| ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `/skill-habit:quick`   | Aktuelles Präfix und numerische Kürzel anzeigen | Präfix oder Shortcut-Zuordnung vergessen? Ausgabe z. B.: `Präfix: sh`, `/sh1 → git-smart`                                            |
-| `/skill-habit:server`  | Web-Verwaltungsoberfläche im Browser öffnen     | Einstellungen ändern, Analysen ansehen, Skills verwalten; Browser öffnet automatisch, Server beendet sich nach 5 Minuten Inaktivität |
-| `/skill-habit:rebuild` | Shortcuts sofort neu generieren                 | Nach manueller Bearbeitung von `~/.skill-habit/config.json`; Änderungen über das Web UI lösen automatisch ein Rebuild aus            |
-| `/skill-habit:version` | Installierte Version anzeigen                   | Versionsnummer bei Fehlersuche oder Bug-Report bestätigen                                                                            |
+Der Browser öffnet sich automatisch. Der Server beendet sich nach 5 Minuten Inaktivität.
 
 **config.json**
 
@@ -267,38 +329,19 @@ Die folgenden Verwaltungs-Skills sind als Plugin eingebaut und immer verfügbar,
 }
 ```
 
-**🔮 Assoziationsvorhersage (Intelligente Sortierung)**
+---
 
-Wenn `enable_sequence_prediction` aktiviert ist, führt das System bei jedem Sitzungsstart folgendes aus:
+## Integrierte skill-habit-Skills
 
-1. Liest den zuletzt verwendeten Skill
-2. Fragt die historische Übergangsmatrix ab, um die 3 wahrscheinlichsten nächsten Skills vorherzusagen
-3. Hebt diese 3 Skills an die Spitze der Kürzel-Liste
+Die folgenden Verwaltungs-Skills sind als Plugin eingebaut und immer verfügbar, unabhängig vom Präfix:
 
-Wirksamkeit hängt vom Kürzelmodus ab:
-
-| Modus                        | Auswirkung                                                                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Numerisch** (`/sh1 /sh2…`) | Die Vorhersage ändert direkt, welcher Skill `sh1`/`sh2` belegt. Die Eingabe von `/sh1` führt immer den empfohlenen Skill aus. **Vollständig wirksam.** |
-| **Befehl** (`/sh-<name>`)    | Die Menüreihenfolge ist von Claude Code alphabetisch festgelegt — die Vorhersage **hat keinen Einfluss auf die Menüreihenfolge**.                       |
-
-> Die Genauigkeit verbessert sich mit zunehmenden Daten. Ergebnisse sind nach 20+ Sitzungen aussagekräftig.
-
-**📐 Sortierung numerischer Kürzel**
-
-Claude Codes Autovervollständigung sortiert Vorschläge hauptsächlich nach **Gesamtlänge des Namens** — kürzere Namen erzielen höhere Punkte und erscheinen zuerst. skill-habit generiert numerische Kürzel mit **streng zunehmenden Namenslängen**, indem die Rangziffer N-mal wiederholt wird:
-
-| Rang              | Kürzel    | Länge     |
-| ----------------- | --------- | --------- |
-| 1 (am häufigsten) | `sh1`     | 2 Zeichen |
-| 2                 | `sh22`    | 3 Zeichen |
-| 3                 | `sh333`   | 4 Zeichen |
-| 4                 | `sh4444`  | 5 Zeichen |
-| 5                 | `sh55555` | 6 Zeichen |
-
-Dies garantiert, dass das Dropdown Kürzel in der Häufigkeitsreihenfolge anzeigt. Wenn sich deine Nutzungsmuster ändern, werden die Kürzeluweisungen beim nächsten Sitzungsstart automatisch aktualisiert.
-
-Aufruf: `/sh1` direkt eingeben oder `/sh2` (Fuzzy-Match auf `sh22`) und Enter drücken.
+| Skill                  | Beschreibung                                    | Wann verwenden                                                                                                                       |
+| ---------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `/skill-habit:quick`   | Aktuelles Präfix und numerische Kürzel anzeigen | Präfix oder Shortcut-Zuordnung vergessen? Ausgabe z. B.: `Präfix: sh`, `/sh1 → git-smart`                                            |
+| `/skill-habit:server`  | Web-Verwaltungsoberfläche im Browser öffnen     | Einstellungen ändern, Analysen ansehen, Skills verwalten; Browser öffnet automatisch, Server beendet sich nach 5 Minuten Inaktivität. Erneuter Aufruf startet den Server neu (kein doppeltes Fenster); fester Standardport 5027, bei Konflikt wird ein zufälliger Port verwendet |
+| `/skill-habit:rebuild`    | Shortcuts sofort neu generieren                 | Nach manueller Bearbeitung von `~/.skill-habit/config.json`; Änderungen über das Web UI lösen automatisch ein Rebuild aus            |
+| `/skill-habit:version`    | Installierte Version anzeigen                   | Versionsnummer bei Fehlersuche oder Bug-Report bestätigen                                                                            |
+| `/skill-habit:uninstall`  | skill-habit deinstallieren | Erkennt die Installationsmethode automatisch, bereinigt Hooks, Kürzel-Skills und Plugin-Daten; fragt, ob Nutzungshistorie und Konfigurationsdaten ebenfalls gelöscht werden sollen |
 
 ---
 
@@ -316,7 +359,7 @@ Aufruf: `/sh1` direkt eingeben oder `/sh2` (Fuzzy-Match auf `sh22`) und Enter dr
 - **Skills auf die Blacklist setzen** — auf **Blockieren** in einer Zeile klicken, um einen Skill vom Häufigkeitsranking und den Kürzeln auszuschließen; die Blacklist (anzeigen, blättern, entsperren) im ausklappbaren Blacklist-Bereich am Ende des Tabs verwalten
 - **Nutzungshistorie** — sehen, wie oft du jeden Skill genutzt hast und wann du ihn zuletzt verwendet hast
 
-> Der Skills-Tab zeigt nur Skills, die du mindestens einmal verwendet hast. Skills werden aus `~/.claude/skills/` und allen installierten Plugins bezogen.
+> Der Skills-Tab zeigt nur Skills, die du mindestens einmal verwendet hast. Skills werden aus `~/.claude/skills/`, allen installierten Plugins sowie benutzerdefinierten Befehlen unter `~/.claude/commands/` bezogen (nach Namensraum gruppiert im **Commands**-Bereich am Ende der Seite).
 
 ### 📊 Analysen
 
@@ -350,6 +393,7 @@ Der **Einstellungen**-Tab enthält drei Karten, Änderungen treten sofort in Kra
 | Zeilen im Top-Skills-Diagramm | Anzahl der Skills im Analytics-Balkendiagramm                                                                              |
 | Neuaufbau-Intervall           | Minuten der Inaktivität bis zur automatischen Neustrukturierung der Kürzel                                                 |
 | Sequenzvorhersage             | Sagt den nächsten wahrscheinlichen Skill aus der Nutzungshistorie voraus                                                   |
+| Selbst aus Statistik ausschließen | Wenn aktiv, werden Aufrufe von `skill-habit:*`-Befehlen nicht in den Statistiken gezählt (standardmäßig aktiv)        |
 | Vorhersagetiefe               | Wie viele Skills die Sequenzvorhersage befördern darf (1–5)                                                                |
 | Design                        | Hell / Dunkel / System                                                                                                     |
 | Sprache                       | Oberflächensprache: Auto / 中文 / English / Deutsch / Français / Русский / 한국어 / 日本語                                 |

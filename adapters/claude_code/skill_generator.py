@@ -27,6 +27,7 @@ from core.analyzer import top_skills, predict_next, trim_log
 
 CLAUDE_DIR = Path.home() / ".claude"
 CLAUDE_SKILLS_DIR = CLAUDE_DIR / "skills"
+CLAUDE_COMMANDS_DIR = CLAUDE_DIR / "commands"
 
 # Plugin skills live under ~/.claude/plugins/cache/
 PLUGIN_SKILLS_GLOB = str(CLAUDE_DIR / "plugins" / "cache" / "*" / "*" / "*" / "skills" / "*" / "SKILL.md")
@@ -37,7 +38,7 @@ _QUICK_SKILL_DIR = CLAUDE_SKILLS_DIR / "skill-habit" / "skills" / "quick"
 _QUICK_SKILL_CONTENT = (
     "---\nname: skill-habit:quick\n"
     "description: 快速显示当前快捷前缀和技能映射 / Show current prefix and shortcut mappings\n---\n\n"
-    "Run this now:\n\n"
+    "Use the Bash tool to run the command below. Do NOT show the command to the user — show only its output.\n\n"
     "```bash\npython3 -c \"\nimport json, os, locale\n\n"
     "cfg = os.path.expanduser('~/.skill-habit/config.json')\n"
     "smap = os.path.expanduser('~/.skill-habit/shortcut-map.json')\n\n"
@@ -76,7 +77,7 @@ _QUICK_SKILL_CONTENT = (
 
 # Static plugin skills to sync from repo → ~/.claude/skills/skill-habit/skills/
 _PLUGIN_DIR = CLAUDE_SKILLS_DIR / "skill-habit"
-_STATIC_SKILLS = ("server", "version", "rebuild")
+_STATIC_SKILLS = ("server", "version", "rebuild", "uninstall")
 
 _PLUGIN_JSON_CONTENT = json.dumps({
     "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
@@ -84,17 +85,18 @@ _PLUGIN_JSON_CONTENT = json.dumps({
     "version": "0.0.1",
     "description": "skill-habit management skills — quick info, web UI, version, rebuild",
     "author": {"name": "kiss4u"},
-    "skills": ["./skills/quick", "./skills/server", "./skills/version", "./skills/rebuild"],
+    "skills": ["./skills/quick", "./skills/server", "./skills/version", "./skills/rebuild", "./skills/uninstall"],
 }, indent=2, ensure_ascii=False) + "\n"
 
 
 def scan_all_skills() -> dict[str, dict[str, str]]:
     """
     Return {skill_name: {description, content, source_path, dir_slug}} for all installed skills.
-    Scans both ~/.claude/skills/ and marketplace plugin caches.
+    Scans ~/.claude/skills/, marketplace plugin caches, and ~/.claude/commands/.
     """
     skills: dict[str, dict[str, str]] = {}
     _scan_dir(CLAUDE_SKILLS_DIR, skills)
+    _scan_commands_dir(CLAUDE_COMMANDS_DIR, skills)
     plugin_base = CLAUDE_DIR / "plugins" / "cache"
     if plugin_base.exists():
         for skills_dir in plugin_base.glob("*/*/*/skills"):
@@ -113,6 +115,37 @@ def scan_all_skills() -> dict[str, dict[str, str]]:
     return skills
 
 
+def _scan_commands_dir(commands_dir: Path, out: dict[str, dict[str, str]]) -> None:
+    """Scan ~/.claude/commands/ for .md slash-command files (flat and one level deep)."""
+    if not commands_dir.exists():
+        return
+    for item in commands_dir.iterdir():
+        if item.is_file() and item.suffix == ".md":
+            _add_command_file(item, commands_dir, out)
+        elif item.is_dir():
+            for md_file in sorted(item.glob("*.md")):
+                _add_command_file(md_file, commands_dir, out)
+
+
+def _add_command_file(path: Path, commands_dir: Path, out: dict[str, dict[str, str]]) -> None:
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError:
+        return
+    name, description = _parse_frontmatter(content)
+    if not name:
+        # Derive from path: commands/opsx/apply.md → opsx:apply, commands/apply.md → apply
+        rel = path.relative_to(commands_dir)
+        name = ":".join(rel.with_suffix("").parts)
+    if name not in out:
+        out[name] = {
+            "description": description,
+            "content": content,
+            "source_path": str(path),
+            "dir_slug": path.stem,
+        }
+
+
 def _scan_dir(skills_dir: Path, out: dict[str, dict[str, str]]) -> None:
     if not skills_dir.exists():
         return
@@ -128,9 +161,9 @@ def _scan_dir(skills_dir: Path, out: dict[str, dict[str, str]]) -> None:
             continue
         name, description = _parse_frontmatter(content)
         if not name:
-            print(f"[skill-habit] warn: {skill_file} has no name: in frontmatter, skipped", file=sys.stderr)
-            continue
-        if name and name not in out:
+            name = skill_dir.name
+            print(f"[skill-habit] warn: {skill_file} has no name: in frontmatter, using dir name '{name}'", file=sys.stderr)
+        if name not in out:
             out[name] = {
                 "description": description,
                 "content": content,
@@ -277,15 +310,20 @@ def generate(config: dict[str, Any] | None = None) -> None:
     custom_desc = config.get("custom_descriptions", {})
     exclude = set(config.get("exclude_skills", [])) | set(config.get("blacklist", []))
     shortcut_mode = config.get("active_mode") or config.get("shortcut_mode", "both")
+    commands_shortcuts = config.get("commands_generate_shortcuts", True)
 
     all_skills = scan_all_skills()
 
     # Never generate shortcuts for the prefix namespace or skill-habit's own meta-skills
     exclude.add(prefix)
+    _commands_str = str(CLAUDE_COMMANDS_DIR) + "/"
     def _is_shortcut(s: str) -> bool:
         return s.startswith(f"{prefix}-") or (s.startswith(prefix) and s[len(prefix):][:1].isdigit())
     def _is_self(s: str) -> bool:
         return s.startswith("skill-habit:")
+    def _is_command(s: str) -> bool:
+        src = all_skills.get(s, {}).get("source_path", "")
+        return bool(src and src.startswith(_commands_str))
 
     ranked = [
         r for r in top_skills(time_window, n=top_n * 5)
@@ -293,6 +331,7 @@ def generate(config: dict[str, Any] | None = None) -> None:
         and not _is_shortcut(r["skill"])
         and not _is_self(r["skill"])
         and r["skill"] in all_skills
+        and (commands_shortcuts or not _is_command(r["skill"]))
     ]
     ranked_names = [r["skill"] for r in ranked]
 
@@ -334,25 +373,62 @@ def generate(config: dict[str, Any] | None = None) -> None:
         lock_fd.close()
 
 
+def _is_plugin_installed() -> bool:
+    """Return True if skill-habit is installed via 'claude plugins install'."""
+    installed = CLAUDE_DIR / "plugins" / "installed_plugins.json"
+    if not installed.exists():
+        return False
+    try:
+        data = json.loads(installed.read_text(encoding="utf-8"))
+        return "skill-habit@skill-habit" in data.get("plugins", {})
+    except Exception:
+        return False
+
+
 def _ensure_plugin_skills() -> None:
     """Create or refresh the skill-habit skills-dir plugin under ~/.claude/skills/skill-habit/.
 
     Called each rebuild so the plugin stays in sync when the user updates skill-habit.
     For plugin installs (claude plugins install), Claude Code manages skills directly
-    from the cached repo — this function only matters for bootstrap/pip installs.
+    from the cached repo — only the dynamic 'quick' skill is written here to avoid
+    duplicate skill names (which would cause commands like /skill-habit:server to run twice).
     """
+    plugin_installed = _is_plugin_installed()
+
+    # When installed via plugin, omit static skills from the generated dir to prevent
+    # duplicate registrations with the plugin cache copy.
+    if plugin_installed:
+        skills_list = ["./skills/quick"]
+        # Clean up any previously written static skills
+        for skill_name in _STATIC_SKILLS:
+            stale = _PLUGIN_DIR / "skills" / skill_name
+            if stale.exists():
+                shutil.rmtree(stale)
+    else:
+        skills_list = ["./skills/quick"] + [f"./skills/{s}" for s in _STATIC_SKILLS]
+
+    plugin_json_content = json.dumps({
+        "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+        "name": "skill-habit",
+        "version": "0.0.1",
+        "description": "skill-habit management skills — quick info, web UI, version, rebuild",
+        "author": {"name": "kiss4u"},
+        "skills": skills_list,
+    }, indent=2, ensure_ascii=False) + "\n"
+
     meta_dir = _PLUGIN_DIR / ".claude-plugin"
     meta_dir.mkdir(parents=True, exist_ok=True)
     plugin_json = meta_dir / "plugin.json"
-    if not plugin_json.exists() or plugin_json.read_text(encoding="utf-8") != _PLUGIN_JSON_CONTENT:
-        plugin_json.write_text(_PLUGIN_JSON_CONTENT, encoding="utf-8")
+    if not plugin_json.exists() or plugin_json.read_text(encoding="utf-8") != plugin_json_content:
+        plugin_json.write_text(plugin_json_content, encoding="utf-8")
 
-    src_base = _REPO_ROOT / "skills"
-    for skill_name in _STATIC_SKILLS:
-        src = src_base / skill_name / "SKILL.md"
-        if not src.exists():
-            continue
-        _write_skill_file(_PLUGIN_DIR / "skills" / skill_name, src.read_text(encoding="utf-8"))
+    if not plugin_installed:
+        src_base = _REPO_ROOT / "skills"
+        for skill_name in _STATIC_SKILLS:
+            src = src_base / skill_name / "SKILL.md"
+            if not src.exists():
+                continue
+            _write_skill_file(_PLUGIN_DIR / "skills" / skill_name, src.read_text(encoding="utf-8"))
 
 
 def _atomic_rebuild(
@@ -438,6 +514,9 @@ def clear() -> None:
             if p.exists():
                 shutil.rmtree(p)
         GENERATED_MANIFEST.unlink()
+    # Remove the static plugin skills dir unless it IS the repo (method-B install to ~/.claude/skills/)
+    if _PLUGIN_DIR.exists() and _PLUGIN_DIR.resolve() != _REPO_ROOT.resolve():
+        shutil.rmtree(_PLUGIN_DIR)
 
 
 if __name__ == "__main__":

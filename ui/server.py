@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -51,6 +52,132 @@ def _cached_scan_all_skills() -> dict:
     _skills_cache = scan_all_skills()
     _skills_cache_mtime = mtime
     return _skills_cache
+
+
+def _enrich_config(config: dict) -> dict:
+    """Add runtime-computed exclusion sets before building cache."""
+    if config.get("commands_generate_shortcuts", True):
+        return config
+    cmd_dir = str(Path.home() / ".claude" / "commands") + "/"
+    cmd_skills = [
+        name for name, info in _cached_scan_all_skills().items()
+        if info.get("source_path", "").startswith(cmd_dir)
+    ]
+    return {**config, "_exclude_skills": cmd_skills}
+
+
+def _get_command_groups() -> list:
+    """Group ~/.claude/commands/ .md files by namespace."""
+    all_skills = _cached_scan_all_skills()
+    commands_base = Path.home() / ".claude" / "commands"
+    commands_str = str(commands_base) + "/"
+    groups: dict = {}
+    for skill_name, info in all_skills.items():
+        source_str = info.get("source_path", "")
+        if not source_str or not source_str.startswith(commands_str):
+            continue
+        ns = skill_name.split(":")[0] if ":" in skill_name else "_root"
+        group_id = f"commands:{ns}"
+        if group_id not in groups:
+            groups[group_id] = {
+                "id": group_id,
+                "name": ns if ns != "_root" else "(root)",
+                "commands": [],
+            }
+        groups[group_id]["commands"].append({
+            "name": skill_name,
+            "description": info.get("description", ""),
+        })
+    for g in groups.values():
+        g["commands"].sort(key=lambda c: c["name"])
+    return sorted(groups.values(), key=lambda g: g["name"])
+
+
+def _get_skill_groups() -> list:
+    """Group installed skills by their source plugin/package."""
+    all_skills = _cached_scan_all_skills()
+
+    from core.config import GENERATED_MANIFEST
+    generated: set = set()
+    if GENERATED_MANIFEST.exists():
+        try:
+            generated |= set(json.loads(GENERATED_MANIFEST.read_text()))
+        except Exception:
+            pass
+
+    plugin_cache_base = Path.home() / ".claude" / "plugins" / "cache"
+    claude_skills_base = Path.home() / ".claude" / "skills"
+    plugin_cache_str = str(plugin_cache_base) + "/"
+    claude_skills_str = str(claude_skills_base) + "/"
+
+    groups: dict = {}
+    for skill_name, info in all_skills.items():
+        if info.get("dir_slug", "") in generated:
+            continue
+        source_str = info.get("source_path", "")
+        if not source_str:
+            continue
+        source = Path(source_str)
+        skill_detail = {
+            "name": skill_name,
+            "description": info.get("description", ""),
+            "skill_path": str(source.parent),
+        }
+
+        if source_str.startswith(plugin_cache_str):
+            try:
+                rel = source.relative_to(plugin_cache_base)
+                parts = rel.parts
+                if len(parts) >= 3:
+                    publisher, plugin_name, version = parts[0], parts[1], parts[2]
+                    group_id = f"{publisher}/{plugin_name}/{version}"
+                    if group_id not in groups:
+                        groups[group_id] = {
+                            "id": group_id,
+                            "name": f"{publisher}/{plugin_name}",
+                            "version": version,
+                            "type": "plugin",
+                            "uninstall_path": str(plugin_cache_base / publisher / plugin_name / version),
+                            "skills": [],
+                        }
+                    groups[group_id]["skills"].append(skill_detail)
+            except ValueError:
+                pass
+        elif source_str.startswith(claude_skills_str):
+            try:
+                rel = source.relative_to(claude_skills_base)
+                parts = rel.parts
+                if len(parts) >= 4 and parts[1] == "skills":
+                    group_dir = parts[0]
+                    if group_dir == "skill-habit":
+                        continue
+                    group_id = f"local:{group_dir}"
+                    if group_id not in groups:
+                        groups[group_id] = {
+                            "id": group_id,
+                            "name": group_dir,
+                            "version": "",
+                            "type": "local",
+                            "uninstall_path": str(claude_skills_base / group_dir),
+                            "skills": [],
+                        }
+                    groups[group_id]["skills"].append(skill_detail)
+                elif len(parts) == 2:
+                    # Standalone skill: ~/.claude/skills/<skill-dir>/SKILL.md
+                    skill_dir = parts[0]
+                    group_id = f"standalone:{skill_dir}"
+                    groups[group_id] = {
+                        "id": group_id,
+                        "name": skill_name,
+                        "version": "",
+                        "type": "skill",
+                        "uninstall_path": str(claude_skills_base / skill_dir),
+                        "skills": [skill_detail],
+                    }
+            except ValueError:
+                pass
+
+    return sorted(groups.values(), key=lambda g: (g["type"], g["name"]))
 
 
 def _local_version() -> str:
@@ -131,7 +258,13 @@ def _check_update() -> dict:
             except Exception:
                 pass
         level = _update_level(current, remote_v)
-        upgrade_cmd = f"git -C {repo_dir} pull && python3 {repo_dir}/adapters/claude_code/skill_generator.py"
+        is_git = (Path(repo_dir) / ".git").exists()
+        if is_git:
+            upgrade_cmd = f"git -C {repo_dir} pull && python3 {repo_dir}/adapters/claude_code/skill_generator.py"
+        elif shutil.which("skill-habit"):
+            upgrade_cmd = "skill-habit install"
+        else:
+            upgrade_cmd = "claude plugins update skill-habit@skill-habit"
         result = {"current": current, "latest": remote_v or current,
                   "has_update": level is not None, "update_level": level,
                   "commits_ahead": len(ahead), "upgrade_cmd": upgrade_cmd,
@@ -209,13 +342,13 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     config = load_config()
                     config["time_window"] = tw
-                    cache = rebuild_cache(config)
+                    cache = rebuild_cache(_enrich_config(config))
                     self._json(cache)
             else:
                 cache = load_cache()
                 if cache is None:
                     config = load_config()
-                    cache = rebuild_cache(config)
+                    cache = rebuild_cache(_enrich_config(config))
                 self._json(cache)
         elif path == "/api/stats":
             tw = qs.get("time_window", ["all"])[0]
@@ -227,8 +360,11 @@ class Handler(BaseHTTPRequestHandler):
                         generated |= set(json.loads(mf.read_text()))
                     except Exception:
                         pass
-            bl: set[str] = set(load_config().get("blacklist", []))
-            self._json(analyzer.total_stats(tw, exclude_skills=generated | bl))
+            _cfg = load_config()
+            bl: set[str] = set(_cfg.get("blacklist", []))
+            _excl_self = _cfg.get("exclude_self_tracking", True)
+            self._json(analyzer.total_stats(tw, exclude_skills=generated | bl,
+                                            exclude_prefix="skill-habit:" if _excl_self else None))
         elif path == "/api/blacklist":
             config = load_config()
             bl_list = config.get("blacklist", [])
@@ -267,7 +403,9 @@ class Handler(BaseHTTPRequestHandler):
                     except Exception:
                         pass
             _bl2: set[str] = set(load_config().get("blacklist", []))
-            self._json(analyzer.top_skills(tw, n, exclude_skills=_generated | _bl2, exclude_prefix="skill-habit:"))
+            _excl_self2 = load_config().get("exclude_self_tracking", True)
+            self._json(analyzer.top_skills(tw, n, exclude_skills=_generated | _bl2,
+                                           exclude_prefix="skill-habit:" if _excl_self2 else None))
         elif path == "/api/heatmap":
             try:
                 weeks = _int_param(qs, "weeks", 26)
@@ -307,7 +445,10 @@ class Handler(BaseHTTPRequestHandler):
                         _generated |= set(json.loads(_mf.read_text()))
                     except Exception:
                         pass
-            stats_map    = {r["skill"]: r["count"] for r in analyzer.top_skills("all", n=9999)
+            _excl_self_s = config.get("exclude_self_tracking", True)
+            stats_map    = {r["skill"]: r["count"] for r in analyzer.top_skills(
+                                "all", n=9999,
+                                exclude_prefix="skill-habit:" if _excl_self_s else None)
                             if r["skill"] not in _generated}
             last_used_map = analyzer.last_used_per_skill()
 
@@ -320,6 +461,15 @@ class Handler(BaseHTTPRequestHandler):
                 desc        = custom or orig_desc
                 if q and q not in name.lower() and q not in desc.lower():
                     continue
+                src = info.get("source_path", "")
+                try:
+                    if src:
+                        st = Path(src).stat()
+                        install_time = getattr(st, 'st_birthtime', st.st_mtime)
+                    else:
+                        install_time = 0
+                except OSError:
+                    install_time = 0
                 skills_list.append({
                     "name":                name,
                     "description":         desc,
@@ -327,6 +477,7 @@ class Handler(BaseHTTPRequestHandler):
                     "custom_description":  custom,
                     "count":               stats_map.get(name, 0),
                     "last_used":           last_used_map.get(name, 0),
+                    "install_time":        install_time,
                     "is_pinned":           name in pinned,
                     "pin_order":           pinned.index(name) if name in pinned else -1,
                 })
@@ -352,7 +503,8 @@ class Handler(BaseHTTPRequestHandler):
                         "skills": skills_list[start:start + per_page]})
         elif path == "/api/transitions":
             tw = qs.get("time_window", ["all"])[0]
-            self._json(analyzer.transition_matrix(tw))
+            _excl_t = load_config().get("exclude_self_tracking", True)
+            self._json(analyzer.transition_matrix(tw, exclude_prefix="skill-habit:" if _excl_t else None))
         elif path == "/api/hourly":
             tw = qs.get("time_window", ["all"])[0]
             self._json(analyzer.hourly_distribution(tw))
@@ -396,6 +548,10 @@ class Handler(BaseHTTPRequestHandler):
             config = load_config()
             cur = config.get("prefix", "sh")
             self._json({"suggestions": _suggest(cur_prefix=cur, n=8)})
+        elif path == "/api/commands":
+            self._json({"groups": _get_command_groups()})
+        elif path == "/api/skill-groups":
+            self._json({"groups": _get_skill_groups()})
         else:
             self.send_error(404)
 
@@ -408,7 +564,7 @@ class Handler(BaseHTTPRequestHandler):
             save_config(config)
             # Rebuild shortcuts immediately so current session reflects changes
             generate_shortcuts(config)
-            rebuild_cache(config)
+            rebuild_cache(_enrich_config(config))
             self._json({"ok": True})
         elif path == "/api/blacklist/add":
             name = data.get("skill", "").strip()
@@ -438,7 +594,7 @@ class Handler(BaseHTTPRequestHandler):
             defaults = copy.deepcopy(DEFAULT_CONFIG)
             save_config(defaults)
             generate_shortcuts(defaults)
-            rebuild_cache(defaults)
+            rebuild_cache(_enrich_config(defaults))
             self._json(defaults)
         elif path == "/api/logs/clear":
             count = analyzer.clear_log()
@@ -463,6 +619,61 @@ class Handler(BaseHTTPRequestHandler):
                             "stdout": result.stdout, "stderr": result.stderr})
             except subprocess.TimeoutExpired:
                 self._json({"ok": False, "error": "Upgrade timed out after 120s"})
+            except Exception as e:
+                self._json({"ok": False, "error": str(e)})
+        elif path == "/api/skill-groups/uninstall":
+            uninstall_path = data.get("uninstall_path", "").strip()
+            group_id = data.get("group_id", "").strip()
+            skill_name_only = data.get("skill_name", "").strip()  # individual skill uninstall
+            safe_prefixes = [
+                str(Path.home() / ".claude" / "plugins" / "cache") + "/",
+                str(Path.home() / ".claude" / "skills") + "/",
+            ]
+            if not uninstall_path:
+                self._json({"ok": False, "error": "Missing uninstall_path"})
+                return
+            if not any(uninstall_path.startswith(p) for p in safe_prefixes):
+                self._json({"ok": False, "error": "Path not in allowed directory"})
+                return
+            p = Path(uninstall_path)
+            if not p.exists():
+                self._json({"ok": False, "error": "Path does not exist"})
+                return
+            # Collect which skill names will be removed before deleting
+            if skill_name_only:
+                skills_to_remove: set = {skill_name_only}
+            else:
+                skills_to_remove = set()
+                for g in _get_skill_groups():
+                    if g["id"] == group_id or g["uninstall_path"] == uninstall_path:
+                        for s in g["skills"]:
+                            skills_to_remove.add(s["name"] if isinstance(s, dict) else s)
+            try:
+                shutil.rmtree(p)
+                # Clean up config: remove uninstalled skills from pinned, blacklist, custom_descriptions
+                if skills_to_remove:
+                    config = load_config()
+                    changed = False
+                    pinned = config.get("pinned_skills", [])
+                    new_pinned = [s for s in pinned if s not in skills_to_remove]
+                    if new_pinned != pinned:
+                        config["pinned_skills"] = new_pinned
+                        changed = True
+                    blacklist = config.get("blacklist", [])
+                    new_blacklist = [s for s in blacklist if s not in skills_to_remove]
+                    if new_blacklist != blacklist:
+                        config["blacklist"] = new_blacklist
+                        changed = True
+                    custom_desc = config.get("custom_descriptions", {})
+                    new_custom = {k: v for k, v in custom_desc.items() if k not in skills_to_remove}
+                    if len(new_custom) != len(custom_desc):
+                        config["custom_descriptions"] = new_custom
+                        changed = True
+                    if changed:
+                        save_config(config)
+                generate_shortcuts(load_config())
+                rebuild_cache(_enrich_config(load_config()))
+                self._json({"ok": True, "removed_skills": list(skills_to_remove)})
             except Exception as e:
                 self._json({"ok": False, "error": str(e)})
         elif path == "/api/shutdown":
@@ -526,13 +737,16 @@ def run(port: int = 0, open_browser: bool = True) -> None:
     shutdown_event = threading.Event()
     Handler._shutdown_event = shutdown_event
 
-    server = HTTPServer(("127.0.0.1", port), Handler)
+    try:
+        server = HTTPServer(("127.0.0.1", port), Handler)
+    except OSError:
+        server = HTTPServer(("127.0.0.1", 0), Handler)
     actual_port = server.server_address[1]
 
     PORT_FILE.parent.mkdir(parents=True, exist_ok=True)
     PORT_FILE.write_text(str(actual_port))
 
-    rebuild_cache(load_config())
+    rebuild_cache(_enrich_config(load_config()))
 
     print(f"skill-habit UI: http://127.0.0.1:{actual_port}")
 

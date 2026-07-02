@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-INSTALL_DIR="${HOME}/.local/share/skill-habit"
+INSTALL_DIR="${SKILL_HABIT_INSTALL_DIR:-${HOME}/.claude/skills/skill-habit}"
 
 if [[ ! -d "$INSTALL_DIR" ]]; then
   echo "[dev-sync] Install dir not found: $INSTALL_DIR" >&2

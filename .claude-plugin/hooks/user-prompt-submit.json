@@ -1,0 +1,17 @@
+{
+  "description": "skill-habit UserPromptSubmit hook — records slash-command invocations and throttled re-ranking",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/adapters/claude_code/hooks/user-prompt-submit.sh\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

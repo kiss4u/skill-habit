@@ -7,7 +7,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 log() { printf "\033[34m[skill-habit]\033[0m %s\n" "$*"; }
 ok()  { printf "\033[32m[skill-habit]\033[0m %s\n" "$*"; }
-err() { printf "\033[31m[skill-habit]\033[0m %s\n" "$*" >&2; }
+err() { printf "\033[31m[skill-habit]\033[0m %s\n" "$*" >&2; exit 1; }
 
 log "Pulling latest changes..."
 git -C "$REPO_DIR" pull

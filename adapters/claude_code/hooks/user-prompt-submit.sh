@@ -40,6 +40,8 @@ except Exception:
 # Extract skill name: "/opsx:propose fix the bug" -> "opsx:propose"
 SKILL_NAME=$(printf '%s' "$PROMPT" | sed 's|^/||' | awk '{print $1}')
 [[ -n "$SKILL_NAME" ]] || exit 0
+# Skip file-path-like names (project commands resolved to absolute paths)
+[[ "$SKILL_NAME" == */* ]] && exit 0
 
 # Count characters after the skill name as args_len
 ARGS=$(printf '%s' "$PROMPT" | sed "s|^/$SKILL_NAME||" | sed 's|^ *||')
